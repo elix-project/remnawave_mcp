@@ -18,12 +18,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/erruqie/remnawave_mcp.git"
+    "url": "git+https://github.com/elix-project/remnawave_mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/erruqie/remnawave_mcp/issues"
+    "url": "https://github.com/elix-project/remnawave_mcp/issues"
   },
-  "homepage": "https://github.com/erruqie/remnawave_mcp#readme",
+  "homepage": "https://github.com/elix-project/remnawave_mcp#readme",
   "keywords": [
     "mcp",
     "mcp-server",

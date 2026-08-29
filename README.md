@@ -42,7 +42,7 @@ Project: `.cursor/mcp.json`. Global: `~/.cursor/mcp.json`. Or **Cursor Settings 
   "mcpServers": {
     "remnawave": {
       "command": "npx",
-      "args": ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "args": ["-y", "git+https://github.com/elix-project/remnawave_mcp.git"],
       "env": {
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "your-api-token-here"
@@ -59,7 +59,7 @@ CLI / IDE / ChatGPT desktop share `~/.codex/config.toml` (or project `.codex/con
 ```toml
 [mcp_servers.remnawave]
 command = "npx"
-args = ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"]
+args = ["-y", "git+https://github.com/elix-project/remnawave_mcp.git"]
 
 [mcp_servers.remnawave.env]
 REMNAWAVE_BASE_URL = "https://vpn.example.com"
@@ -69,7 +69,7 @@ REMNAWAVE_API_TOKEN = "your-api-token-here"
 Or:
 
 ```bash
-codex mcp add remnawave -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
+codex mcp add remnawave -- npx -y git+https://github.com/elix-project/remnawave_mcp.git
 ```
 
 Then add the `env` table in `config.toml`. Check with `codex mcp list`.
@@ -84,7 +84,7 @@ Project: `opencode.json` / `opencode.jsonc`. Global: `~/.config/opencode/opencod
   "mcp": {
     "remnawave": {
       "type": "local",
-      "command": ["npx", "-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "command": ["npx", "-y", "git+https://github.com/elix-project/remnawave_mcp.git"],
       "environment": {
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "your-api-token-here"
@@ -114,7 +114,7 @@ Claude Code:
 claude mcp add remnawave \
   -e REMNAWAVE_BASE_URL=https://vpn.example.com \
   -e REMNAWAVE_API_TOKEN=your-api-token-here \
-  -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
+  -- npx -y git+https://github.com/elix-project/remnawave_mcp.git
 ```
 
 ### Configuration
@@ -184,7 +184,7 @@ Environment variables are passed via `.env` file or `docker-compose.yml`.
 ### Development (from source)
 
 ```bash
-git clone https://github.com/erruqie/remnawave_mcp.git
+git clone https://github.com/elix-project/remnawave_mcp.git
 cd remnawave_mcp
 npm install
 npm run build
@@ -551,7 +551,7 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
   "mcpServers": {
     "remnawave": {
       "command": "npx",
-      "args": ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "args": ["-y", "git+https://github.com/elix-project/remnawave_mcp.git"],
       "env": {
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "ваш-api-токен"
@@ -568,7 +568,7 @@ CLI / IDE / ChatGPT desktop читают `~/.codex/config.toml` (или прое
 ```toml
 [mcp_servers.remnawave]
 command = "npx"
-args = ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"]
+args = ["-y", "git+https://github.com/elix-project/remnawave_mcp.git"]
 
 [mcp_servers.remnawave.env]
 REMNAWAVE_BASE_URL = "https://vpn.example.com"
@@ -578,7 +578,7 @@ REMNAWAVE_API_TOKEN = "ваш-api-токен"
 Или:
 
 ```bash
-codex mcp add remnawave -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
+codex mcp add remnawave -- npx -y git+https://github.com/elix-project/remnawave_mcp.git
 ```
 
 Потом допишите таблицу `env` в `config.toml`. Проверка: `codex mcp list`.
@@ -593,7 +593,7 @@ codex mcp add remnawave -- npx -y git+https://github.com/erruqie/remnawave_mcp.g
   "mcp": {
     "remnawave": {
       "type": "local",
-      "command": ["npx", "-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "command": ["npx", "-y", "git+https://github.com/elix-project/remnawave_mcp.git"],
       "environment": {
         "REMNAWAVE_BASE_URL": "https://vpn.example.com",
         "REMNAWAVE_API_TOKEN": "ваш-api-токен"
@@ -623,7 +623,7 @@ Claude Code:
 claude mcp add remnawave \
   -e REMNAWAVE_BASE_URL=https://vpn.example.com \
   -e REMNAWAVE_API_TOKEN=ваш-api-токен \
-  -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
+  -- npx -y git+https://github.com/elix-project/remnawave_mcp.git
 ```
 
 ### Конфигурация
@@ -693,7 +693,7 @@ docker compose up -d
 ### Разработка (из исходников)
 
 ```bash
-git clone https://github.com/erruqie/remnawave_mcp.git
+git clone https://github.com/elix-project/remnawave_mcp.git
 cd remnawave_mcp
 npm install
 npm run build
