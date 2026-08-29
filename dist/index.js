@@ -7394,8 +7394,7 @@ var require_system = __commonJS({
         NODES_METRICS: "nodes/metrics"
       },
       TOOLS: {
-        GENERATE_X25519: "tools/x25519/generate",
-        ENCRYPT_HAPP_CRYPTO_LINK: "tools/happ/encrypt"
+        GENERATE_X25519: "tools/x25519/generate"
       },
       HEALTH: "health",
       METADATA: "metadata",
@@ -7418,6 +7417,7 @@ var require_users = __commonJS({
       CREATE: "",
       UPDATE: "",
       GET: "",
+      STREAM: "stream",
       DELETE: (uuid2) => `${uuid2}`,
       GET_BY_UUID: (uuid2) => `${uuid2}`,
       ACCESSIBLE_NODES: (uuid2) => `${uuid2}/accessible-nodes`,
@@ -7760,6 +7760,7 @@ var require_routes = __commonJS({
         CREATE: `${exports.ROOT}/${CONTROLLERS.USERS_CONTROLLER}/${CONTROLLERS.USERS_ROUTES.CREATE}`,
         UPDATE: `${exports.ROOT}/${CONTROLLERS.USERS_CONTROLLER}/${CONTROLLERS.USERS_ROUTES.UPDATE}`,
         GET: `${exports.ROOT}/${CONTROLLERS.USERS_CONTROLLER}/${CONTROLLERS.USERS_ROUTES.GET}`,
+        STREAM: `${exports.ROOT}/${CONTROLLERS.USERS_CONTROLLER}/${CONTROLLERS.USERS_ROUTES.STREAM}`,
         DELETE: (uuid2) => `${exports.ROOT}/${CONTROLLERS.USERS_CONTROLLER}/${CONTROLLERS.USERS_ROUTES.DELETE(uuid2)}`,
         GET_BY_UUID: (uuid2) => `${exports.ROOT}/${CONTROLLERS.USERS_CONTROLLER}/${CONTROLLERS.USERS_ROUTES.GET_BY_UUID(uuid2)}`,
         ACCESSIBLE_NODES: (uuid2) => `${exports.ROOT}/${CONTROLLERS.USERS_CONTROLLER}/${CONTROLLERS.USERS_ROUTES.ACCESSIBLE_NODES(uuid2)}`,
@@ -7832,8 +7833,7 @@ var require_routes = __commonJS({
           RECAP: `${exports.ROOT}/${CONTROLLERS.SYSTEM_CONTROLLER}/${CONTROLLERS.SYSTEM_ROUTES.STATS.RECAP}`
         },
         TOOLS: {
-          GENERATE_X25519: `${exports.ROOT}/${CONTROLLERS.SYSTEM_CONTROLLER}/${CONTROLLERS.SYSTEM_ROUTES.TOOLS.GENERATE_X25519}`,
-          ENCRYPT_HAPP_CRYPTO_LINK: `${exports.ROOT}/${CONTROLLERS.SYSTEM_CONTROLLER}/${CONTROLLERS.SYSTEM_ROUTES.TOOLS.ENCRYPT_HAPP_CRYPTO_LINK}`
+          GENERATE_X25519: `${exports.ROOT}/${CONTROLLERS.SYSTEM_CONTROLLER}/${CONTROLLERS.SYSTEM_ROUTES.TOOLS.GENERATE_X25519}`
         },
         TESTERS: {
           SRR_MATCHER: `${exports.ROOT}/${CONTROLLERS.SYSTEM_CONTROLLER}/${CONTROLLERS.SYSTEM_ROUTES.TESTERS.SRR_MATCHER}`
@@ -12212,24 +12212,6 @@ var require_zod = __commonJS({
   }
 });
 
-// node_modules/@remnawave/backend-contract/build/backend/models/api-tokens.schema.js
-var require_api_tokens_schema = __commonJS({
-  "node_modules/@remnawave/backend-contract/build/backend/models/api-tokens.schema.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.ApiTokensSchema = void 0;
-    var zod_1 = require_zod();
-    exports.ApiTokensSchema = zod_1.z.object({
-      uuid: zod_1.z.string().uuid(),
-      token: zod_1.z.string(),
-      tokenName: zod_1.z.string(),
-      scopes: zod_1.z.array(zod_1.z.string()),
-      createdAt: zod_1.z.string().datetime().transform((str) => new Date(str)),
-      updatedAt: zod_1.z.string().datetime().transform((str) => new Date(str))
-    });
-  }
-});
-
 // node_modules/@remnawave/backend-contract/build/backend/constants/cache-keys/cache-keys.constants.js
 var require_cache_keys_constants = __commonJS({
   "node_modules/@remnawave/backend-contract/build/backend/constants/cache-keys/cache-keys.constants.js"(exports) {
@@ -12247,7 +12229,9 @@ var require_cache_keys_constants = __commonJS({
       NODE_SYSTEM_STATS: (uuid2) => `node_system_stats:${uuid2}`,
       NODE_USERS_ONLINE: (uuid2) => `node_users_online:${uuid2}`,
       NODE_VERSIONS: (uuid2) => `node_versions:${uuid2}`,
-      NODE_XRAY_UPTIME: (uuid2) => `node_xray_uptime:${uuid2}`
+      NODE_XRAY_UPTIME: (uuid2) => `node_xray_uptime:${uuid2}`,
+      RAW_INBOUND: (uuid2) => `raw_inbound:${uuid2}`,
+      XRAY_JSON_TEMPLATE: (uuid2) => `xray_json_template:${uuid2}`
     };
     exports.CACHE_KEYS_TTL = {
       REMNAWAVE_SETTINGS: 86400,
@@ -12260,8 +12244,12 @@ var require_cache_keys_constants = __commonJS({
       // 30 seconds
       NODE_USERS_ONLINE: 16,
       // 16 seconds
-      NODE_XRAY_UPTIME: 16
+      NODE_XRAY_UPTIME: 16,
       // 16 seconds
+      RAW_INBOUND: 3600,
+      // 1 hour
+      XRAY_JSON_TEMPLATE: 3600
+      // 1 hour
     };
     exports.INTERNAL_CACHE_KEYS = {
       NODE_USER_USAGE_PREFIX: "node_user_usage:",
@@ -13535,6 +13523,11 @@ var require_errors3 = __commonJS({
         code: "A229",
         message: "One or more provided API token scopes are invalid",
         httpCode: 400
+      },
+      CREATE_INFRA_BILLING_NODE_MISSING_TARGET: {
+        code: "A230",
+        message: "Either nodeUuid or name must be provided",
+        httpCode: 400
       }
     };
   }
@@ -13623,7 +13616,9 @@ var require_events = __commonJS({
         PANEL_STARTED: "service.panel_started",
         LOGIN_ATTEMPT_FAILED: "service.login_attempt_failed",
         LOGIN_ATTEMPT_SUCCESS: "service.login_attempt_success",
-        SUBPAGE_CONFIG_CHANGED: "service.subpage_config_changed"
+        SUBPAGE_CONFIG_CHANGED: "service.subpage_config_changed",
+        API_TOKEN_CREATED: "service.api_token_created",
+        API_TOKEN_DELETED: "service.api_token_deleted"
       },
       ERRORS: {
         BANDWIDTH_USAGE_THRESHOLD_REACHED_MAX_NOTIFICATIONS: "errors.bandwidth_usage_threshold_reached_max_notifications"
@@ -14386,7 +14381,8 @@ var require_template_keys = __commonJS({
       "LAST_TRAFFIC_RESET_AT_UNIX",
       "SS_SUPPORT_LINK",
       "SS_PROFILE_UPDATE_INTERVAL",
-      "SS_HWID_LIMIT"
+      "SS_HWID_LIMIT",
+      "DESCRIPTION"
     ];
   }
 });
@@ -14581,6 +14577,24 @@ var require_constants = __commonJS({
   }
 });
 
+// node_modules/@remnawave/backend-contract/build/backend/models/api-tokens.schema.js
+var require_api_tokens_schema = __commonJS({
+  "node_modules/@remnawave/backend-contract/build/backend/models/api-tokens.schema.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.ApiTokensSchema = void 0;
+    var zod_1 = require_zod();
+    exports.ApiTokensSchema = zod_1.z.object({
+      uuid: zod_1.z.string().uuid(),
+      name: zod_1.z.string(),
+      expireAt: zod_1.z.string().datetime().transform((str) => new Date(str)),
+      scopes: zod_1.z.array(zod_1.z.string()),
+      createdAt: zod_1.z.string().datetime().transform((str) => new Date(str)),
+      updatedAt: zod_1.z.string().datetime().transform((str) => new Date(str))
+    });
+  }
+});
+
 // node_modules/@remnawave/backend-contract/build/backend/commands/api-tokens/create.command.js
 var require_create_command = __commonJS({
   "node_modules/@remnawave/backend-contract/build/backend/commands/api-tokens/create.command.js"(exports) {
@@ -14588,20 +14602,23 @@ var require_create_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CreateApiTokenCommand = void 0;
     var zod_1 = require_zod();
-    var api_tokens_schema_1 = require_api_tokens_schema();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var api_tokens_schema_1 = require_api_tokens_schema();
     var CreateApiTokenCommand;
     (function(CreateApiTokenCommand2) {
       CreateApiTokenCommand2.url = api_1.REST_API.API_TOKENS.CREATE;
       CreateApiTokenCommand2.TSQ_url = CreateApiTokenCommand2.url;
       CreateApiTokenCommand2.endpointDetails = (0, constants_1.getEndpointDetails)(api_1.API_TOKENS_ROUTES.CREATE, "post", "Create a new API token", { scope: "create", kind: "write" }, 'This endpoint is forbidden to use via "API-key". It can only be used with an admin JWT-token.');
       CreateApiTokenCommand2.RequestSchema = zod_1.z.object({
-        tokenName: zod_1.z.string(),
+        name: zod_1.z.string().min(2).max(30),
+        expiresInDays: zod_1.z.number().min(1),
         scopes: zod_1.z.array(zod_1.z.string()).optional().default(["*"])
       });
       CreateApiTokenCommand2.ResponseSchema = zod_1.z.object({
-        response: api_tokens_schema_1.ApiTokensSchema
+        response: api_tokens_schema_1.ApiTokensSchema.extend({
+          token: zod_1.z.string()
+        })
       });
     })(CreateApiTokenCommand || (exports.CreateApiTokenCommand = CreateApiTokenCommand = {}));
   }
@@ -14638,9 +14655,9 @@ var require_find_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.FindAllApiTokensCommand = void 0;
     var zod_1 = require_zod();
-    var api_tokens_schema_1 = require_api_tokens_schema();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var api_tokens_schema_1 = require_api_tokens_schema();
     var FindAllApiTokensCommand;
     (function(FindAllApiTokensCommand2) {
       FindAllApiTokensCommand2.url = api_1.REST_API.API_TOKENS.GET;
@@ -14648,9 +14665,9 @@ var require_find_command = __commonJS({
       FindAllApiTokensCommand2.endpointDetails = (0, constants_1.getEndpointDetails)(api_1.API_TOKENS_ROUTES.GET, "get", "Get all API tokens", { scope: "list", kind: "read" }, 'This endpoint is forbidden to use via "API-key". It can only be used with admin JWT-token.');
       FindAllApiTokensCommand2.ResponseSchema = zod_1.z.object({
         response: zod_1.z.object({
-          apiKeys: zod_1.z.array(api_tokens_schema_1.ApiTokensSchema),
+          tokens: zod_1.z.array(api_tokens_schema_1.ApiTokensSchema),
           docs: zod_1.z.object({
-            isDocsEnabled: zod_1.z.boolean(),
+            enabled: zod_1.z.boolean(),
             scalarPath: zod_1.z.string().nullable(),
             swaggerPath: zod_1.z.string().nullable()
           })
@@ -14731,8 +14748,8 @@ var require_get_status_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetStatusCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetStatusCommand;
     (function(GetStatusCommand2) {
       GetStatusCommand2.url = api_1.REST_API.AUTH.GET_STATUS;
@@ -14770,8 +14787,8 @@ var require_login_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.LoginCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var LoginCommand;
     (function(LoginCommand2) {
       LoginCommand2.url = api_1.REST_API.AUTH.LOGIN;
@@ -14797,8 +14814,8 @@ var require_authorize_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.OAuth2AuthorizeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var OAuth2AuthorizeCommand;
     (function(OAuth2AuthorizeCommand2) {
       OAuth2AuthorizeCommand2.url = api_1.REST_API.AUTH.OAUTH2.AUTHORIZE;
@@ -14823,8 +14840,8 @@ var require_callback_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.OAuth2CallbackCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var OAuth2CallbackCommand;
     (function(OAuth2CallbackCommand2) {
       OAuth2CallbackCommand2.url = api_1.REST_API.AUTH.OAUTH2.CALLBACK;
@@ -14877,8 +14894,8 @@ var require_get_authentication_options_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetPasskeyAuthenticationOptionsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetPasskeyAuthenticationOptionsCommand;
     (function(GetPasskeyAuthenticationOptionsCommand2) {
       GetPasskeyAuthenticationOptionsCommand2.url = api_1.REST_API.AUTH.PASSKEY.GET_AUTHENTICATION_OPTIONS;
@@ -14898,8 +14915,8 @@ var require_verify_authentication_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.VerifyPasskeyAuthenticationCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var VerifyPasskeyAuthenticationCommand;
     (function(VerifyPasskeyAuthenticationCommand2) {
       VerifyPasskeyAuthenticationCommand2.url = api_1.REST_API.AUTH.PASSKEY.VERIFY_AUTHENTICATION;
@@ -14950,8 +14967,8 @@ var require_register_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.RegisterCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var RegisterCommand;
     (function(RegisterCommand2) {
       RegisterCommand2.url = api_1.REST_API.AUTH.REGISTER;
@@ -15504,8 +15521,8 @@ var require_hosts_schema = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.HostsSchema = void 0;
     var zod_1 = require_zod();
-    var hosts_1 = require_hosts2();
     var constants_1 = require_constants();
+    var hosts_1 = require_hosts2();
     exports.HostsSchema = zod_1.z.object({
       uuid: zod_1.z.string().uuid(),
       viewPosition: zod_1.z.number().int(),
@@ -15568,45 +15585,6 @@ var require_external_squad_response_headers_schema = __commonJS({
     exports.ExternalSquadResponseHeadersSchema = void 0;
     var zod_1 = require_zod();
     exports.ExternalSquadResponseHeadersSchema = zod_1.z.nullable(zod_1.z.record(zod_1.z.string(), zod_1.z.string()));
-  }
-});
-
-// node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings/custom-remarks.schema.js
-var require_custom_remarks_schema = __commonJS({
-  "node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings/custom-remarks.schema.js"(exports) {
-    "use strict";
-    var __importDefault = exports && exports.__importDefault || function(mod) {
-      return mod && mod.__esModule ? mod : { "default": mod };
-    };
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.CustomRemarksSchema = void 0;
-    var zod_1 = __importDefault(require_zod());
-    exports.CustomRemarksSchema = zod_1.default.object({
-      expiredUsers: zod_1.default.array(zod_1.default.string()).min(1),
-      limitedUsers: zod_1.default.array(zod_1.default.string()).min(1),
-      disabledUsers: zod_1.default.array(zod_1.default.string()).min(1),
-      emptyHosts: zod_1.default.array(zod_1.default.string()).min(1),
-      HWIDMaxDevicesExceeded: zod_1.default.array(zod_1.default.string()).min(1),
-      HWIDNotSupported: zod_1.default.array(zod_1.default.string()).min(1)
-    });
-  }
-});
-
-// node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings/hwid-settings.schema.js
-var require_hwid_settings_schema = __commonJS({
-  "node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings/hwid-settings.schema.js"(exports) {
-    "use strict";
-    var __importDefault = exports && exports.__importDefault || function(mod) {
-      return mod && mod.__esModule ? mod : { "default": mod };
-    };
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.HwidSettingsSchema = void 0;
-    var zod_1 = __importDefault(require_zod());
-    exports.HwidSettingsSchema = zod_1.default.object({
-      enabled: zod_1.default.boolean(),
-      fallbackDeviceLimit: zod_1.default.number(),
-      maxDevicesAnnounce: zod_1.default.nullable(zod_1.default.string().max(200, { message: "Announce must be less than 200 characters" }))
-    });
   }
 });
 
@@ -15710,6 +15688,9 @@ var require_response_rule_modifications_schema = __commonJS({
       })),
       encryption: exports.ResponseRuleEncryptionSchema.optional().describe(JSON.stringify({
         markdownDescription: 'Encrypt response body with given parameters. Generate keypairs with Rescue CLI: `docker exec -it remnawave cli`, select "Generate keypairs".'
+      })),
+      excludeHostsByTags: zod_1.default.array(zod_1.default.string().regex(/^[A-Z0-9_:]+$/, "Tag can only contain uppercase letters, numbers, underscores and colons").max(36, "Each tag must be less than 36 characters")).min(1).optional().describe(JSON.stringify({
+        markdownDescription: "Excludes hosts from the subscription output if at least one tag in the host matches the given tags."
       }))
     }).optional().describe(JSON.stringify({
       examples: [
@@ -15796,10 +15777,10 @@ var require_response_rule_schema = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ResponseRuleSchema = exports.ResponseRuleSchemaBase = void 0;
     var zod_1 = require_zod();
-    var response_rules_examples_1 = require_response_rules_examples();
     var constants_1 = require_constants();
-    var response_rule_modifications_schema_1 = require_response_rule_modifications_schema();
     var response_rule_condition_schema_1 = require_response_rule_condition_schema();
+    var response_rule_modifications_schema_1 = require_response_rule_modifications_schema();
+    var response_rules_examples_1 = require_response_rules_examples();
     exports.ResponseRuleSchemaBase = zod_1.z.object({
       name: zod_1.z.string().min(1, "Name is required").max(50, "Name must be less than 50 characters").describe(JSON.stringify({
         markdownDescription: "Name of the response rule."
@@ -15879,10 +15860,10 @@ var require_response_rules_config_schema = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ResponseRulesConfigSchema = void 0;
     var zod_1 = require_zod();
-    var response_rule_settings_schema_1 = require_response_rule_settings_schema();
-    var response_rules_examples_1 = require_response_rules_examples();
     var constants_1 = require_constants();
+    var response_rule_settings_schema_1 = require_response_rule_settings_schema();
     var response_rule_schema_1 = require_response_rule_schema();
+    var response_rules_examples_1 = require_response_rules_examples();
     exports.ResponseRulesConfigSchema = zod_1.z.object({
       version: zod_1.z.nativeEnum(constants_1.RESPONSE_RULES_CONFIG_VERSION).describe(JSON.stringify({
         title: "Response Rules Config Version",
@@ -15931,6 +15912,45 @@ var require_response_rules2 = __commonJS({
   }
 });
 
+// node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings/custom-remarks.schema.js
+var require_custom_remarks_schema = __commonJS({
+  "node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings/custom-remarks.schema.js"(exports) {
+    "use strict";
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.CustomRemarksSchema = void 0;
+    var zod_1 = __importDefault(require_zod());
+    exports.CustomRemarksSchema = zod_1.default.object({
+      expiredUsers: zod_1.default.array(zod_1.default.string()).min(1),
+      limitedUsers: zod_1.default.array(zod_1.default.string()).min(1),
+      disabledUsers: zod_1.default.array(zod_1.default.string()).min(1),
+      emptyHosts: zod_1.default.array(zod_1.default.string()).min(1),
+      HWIDMaxDevicesExceeded: zod_1.default.array(zod_1.default.string()).min(1),
+      HWIDNotSupported: zod_1.default.array(zod_1.default.string()).min(1)
+    });
+  }
+});
+
+// node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings/hwid-settings.schema.js
+var require_hwid_settings_schema = __commonJS({
+  "node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings/hwid-settings.schema.js"(exports) {
+    "use strict";
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.HwidSettingsSchema = void 0;
+    var zod_1 = __importDefault(require_zod());
+    exports.HwidSettingsSchema = zod_1.default.object({
+      enabled: zod_1.default.boolean(),
+      fallbackDeviceLimit: zod_1.default.number(),
+      maxDevicesAnnounce: zod_1.default.nullable(zod_1.default.string().max(200, { message: "Announce must be less than 200 characters" }))
+    });
+  }
+});
+
 // node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings.schema.js
 var require_subscription_settings_schema = __commonJS({
   "node_modules/@remnawave/backend-contract/build/backend/models/subscription-settings.schema.js"(exports) {
@@ -15938,9 +15958,9 @@ var require_subscription_settings_schema = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.SubscriptionSettingsSchema = void 0;
     var zod_1 = require_zod();
+    var response_rules_1 = require_response_rules2();
     var custom_remarks_schema_1 = require_custom_remarks_schema();
     var hwid_settings_schema_1 = require_hwid_settings_schema();
-    var response_rules_1 = require_response_rules2();
     exports.SubscriptionSettingsSchema = zod_1.z.object({
       uuid: zod_1.z.string().uuid(),
       profileTitle: zod_1.z.string(),
@@ -16043,9 +16063,9 @@ var require_external_squad_schema = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ExternalSquadSchema = void 0;
     var zod_1 = require_zod();
+    var constants_1 = require_constants();
     var external_squads_1 = require_external_squads2();
     var subscription_settings_1 = require_subscription_settings2();
-    var constants_1 = require_constants();
     exports.ExternalSquadSchema = zod_1.z.object({
       uuid: zod_1.z.string().uuid(),
       viewPosition: zod_1.z.number().int(),
@@ -16109,9 +16129,11 @@ var require_infra_provider_schema = __commonJS({
         totalBills: zod_1.z.number()
       }),
       billingNodes: zod_1.z.array(zod_1.z.object({
-        nodeUuid: zod_1.z.string().uuid(),
         name: zod_1.z.string(),
-        countryCode: zod_1.z.string()
+        details: zod_1.z.object({
+          nodeUuid: zod_1.z.string().uuid(),
+          countryCode: zod_1.z.string()
+        }).nullable()
       }))
     });
     exports.PartialInfraProviderSchema = zod_1.z.object({
@@ -16265,7 +16287,8 @@ var require_infra_billing_node_schema = __commonJS({
     var nodes_schema_1 = require_nodes_schema();
     exports.InfraBillingNodeSchema = zod_1.z.object({
       uuid: zod_1.z.string().uuid(),
-      nodeUuid: zod_1.z.string().uuid(),
+      nodeUuid: zod_1.z.string().uuid().nullable(),
+      name: zod_1.z.string().nullable(),
       providerUuid: zod_1.z.string().uuid(),
       provider: infra_provider_schema_1.PartialInfraProviderSchema.pick({
         uuid: true,
@@ -16277,7 +16300,7 @@ var require_infra_billing_node_schema = __commonJS({
         uuid: true,
         name: true,
         countryCode: true
-      }),
+      }).nullable(),
       nextBillingAt: zod_1.z.string().datetime().transform((str) => new Date(str)),
       createdAt: zod_1.z.string().datetime().transform((str) => new Date(str)),
       updatedAt: zod_1.z.string().datetime().transform((str) => new Date(str))
@@ -16513,7 +16536,7 @@ var require_passkey_settings_schema = __commonJS({
         if (/^http:\/\/localhost:\d+$/.test(value)) {
           return true;
         }
-        if (/^https:\/\/(?=.*\.[a-z]{2,})[^\s\/?#]+$/i.test(value)) {
+        if (/^https:\/\/(?=.*\.[a-z]{2,})[^\s/?#]+$/i.test(value)) {
           return true;
         }
         return false;
@@ -16547,10 +16570,10 @@ var require_remnawave_settings_schema = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.RemnawaveSettingsSchema = void 0;
     var zod_1 = require_zod();
-    var password_auth_settings_schema_1 = require_password_auth_settings_schema();
     var branding_settings_schema_1 = require_branding_settings_schema();
-    var passkey_settings_schema_1 = require_passkey_settings_schema();
     var oauth2_settings_schema_1 = require_oauth2_settings_schema();
+    var passkey_settings_schema_1 = require_passkey_settings_schema();
+    var password_auth_settings_schema_1 = require_password_auth_settings_schema();
     exports.RemnawaveSettingsSchema = zod_1.z.object({
       passkeySettings: zod_1.z.nullable(passkey_settings_schema_1.PasskeySettingsSchema),
       oauth2Settings: zod_1.z.nullable(oauth2_settings_schema_1.Oauth2SettingsSchema),
@@ -16958,8 +16981,8 @@ var require_tanstask_query_request_query_schema = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.TanstackQueryRequestQuerySchema = void 0;
     var zod_1 = require_zod();
-    var tanstask_query_sorting_schema_1 = require_tanstask_query_sorting_schema();
     var tanstask_query_filter_schema_1 = require_tanstask_query_filter_schema();
+    var tanstask_query_sorting_schema_1 = require_tanstask_query_sorting_schema();
     exports.TanstackQueryRequestQuerySchema = zod_1.z.object({
       start: zod_1.z.coerce.number().default(0).describe("Start index (offset) of the results to return, default is 0"),
       size: zod_1.z.coerce.number().min(1, "Size (limit) must be greater than 0").max(1e3, "Size (limit) must be less than 1000").describe("Number of results to return, no more than 1000").default(25),
@@ -17061,8 +17084,8 @@ var require_webhook_schema = __commonJS({
     exports.RemnawaveWebhookEventSchema = exports.RemnawaveWebhookTorrentBlockerEvents = exports.RemnawaveWebhookCrmEvents = exports.RemnawaveWebhookErrorsEvents = exports.RemnawaveWebhookServiceEvents = exports.RemnawaveWebhookNodeEvents = exports.RemnawaveWebhookUserHwidDevicesEvents = exports.RemnawaveWebhookUserEvents = void 0;
     var zod_1 = __importDefault(require_zod());
     var constants_1 = require_constants();
-    var hwid_user_device_schema_1 = require_hwid_user_device_schema();
     var extended_users_schema_1 = require_extended_users_schema();
+    var hwid_user_device_schema_1 = require_hwid_user_device_schema();
     var nodes_schema_1 = require_nodes_schema();
     exports.RemnawaveWebhookUserEvents = zod_1.default.object({
       scope: zod_1.default.literal(constants_1.EVENTS_SCOPES.USER),
@@ -17105,6 +17128,12 @@ var require_webhook_schema = __commonJS({
         subpageConfig: zod_1.default.object({
           action: zod_1.default.enum((0, constants_1.toZodEnum)(constants_1.CRUD_ACTIONS)),
           uuid: zod_1.default.string().uuid()
+        }).optional(),
+        apiToken: zod_1.default.object({
+          name: zod_1.default.string(),
+          uuid: zod_1.default.string().uuid(),
+          expireAt: zod_1.default.string().datetime().transform((str) => new Date(str)),
+          scopes: zod_1.default.array(zod_1.default.string())
         }).optional()
       })
     });
@@ -17439,8 +17468,8 @@ var require_get_all_inbounds_command = __commonJS({
     exports.GetAllInboundsCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetAllInboundsCommand;
     (function(GetAllInboundsCommand2) {
       GetAllInboundsCommand2.url = api_1.REST_API.CONFIG_PROFILES.GET_ALL_INBOUNDS;
@@ -17541,8 +17570,8 @@ var require_get_inbounds_by_profile_uuid_command = __commonJS({
     exports.GetInboundsByProfileUuidCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetInboundsByProfileUuidCommand;
     (function(GetInboundsByProfileUuidCommand2) {
       GetInboundsByProfileUuidCommand2.url = api_1.REST_API.CONFIG_PROFILES.GET_INBOUNDS_BY_PROFILE_UUID;
@@ -17865,9 +17894,9 @@ var require_update_external_squad_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UpdateExternalSquadCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
+    var models_1 = require_models();
     var UpdateExternalSquadCommand;
     (function(UpdateExternalSquadCommand2) {
       UpdateExternalSquadCommand2.url = api_1.REST_API.EXTERNAL_SQUADS.UPDATE;
@@ -17932,8 +17961,8 @@ var require_delete_many_hosts_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkDeleteHostsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var BulkDeleteHostsCommand;
     (function(BulkDeleteHostsCommand2) {
@@ -17957,8 +17986,8 @@ var require_disable_many_hosts_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkDisableHostsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var BulkDisableHostsCommand;
     (function(BulkDisableHostsCommand2) {
@@ -17982,8 +18011,8 @@ var require_enable_many_hosts_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkEnableHostsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var BulkEnableHostsCommand;
     (function(BulkEnableHostsCommand2) {
@@ -18007,8 +18036,8 @@ var require_update_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UpdateHostCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var UpdateHostCommand;
     (function(UpdateHostCommand2) {
@@ -18076,10 +18105,10 @@ var require_update_many_hosts_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UpdateManyHostsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
-    var update_command_1 = require_update_command();
+    var constants_1 = require_constants();
     var models_1 = require_models();
+    var update_command_1 = require_update_command();
     var UpdateManyHostsCommand;
     (function(UpdateManyHostsCommand2) {
       UpdateManyHostsCommand2.url = api_1.REST_API.HOSTS.BULK.UPDATE;
@@ -18130,8 +18159,8 @@ var require_create_command2 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CreateHostCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var CreateHostCommand;
     (function(CreateHostCommand2) {
@@ -18199,8 +18228,8 @@ var require_delete_command2 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DeleteHostCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var DeleteHostCommand;
     (function(DeleteHostCommand2) {
       DeleteHostCommand2.url = api_1.REST_API.HOSTS.DELETE;
@@ -18225,8 +18254,8 @@ var require_get_all_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetAllHostsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var GetAllHostsCommand;
     (function(GetAllHostsCommand2) {
@@ -18250,8 +18279,8 @@ var require_get_one_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetOneHostCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var GetOneHostCommand;
     (function(GetOneHostCommand2) {
@@ -18275,8 +18304,8 @@ var require_reorder_command3 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ReorderHostCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var ReorderHostCommand;
     (function(ReorderHostCommand2) {
@@ -18305,8 +18334,8 @@ var require_get_all_host_tags_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetAllHostTagsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetAllHostTagsCommand;
     (function(GetAllHostTagsCommand2) {
       GetAllHostTagsCommand2.url = api_1.REST_API.HOSTS.TAGS.GET;
@@ -18385,9 +18414,9 @@ var require_create_user_hwid_device_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CreateUserHwidDeviceCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var CreateUserHwidDeviceCommand;
     (function(CreateUserHwidDeviceCommand2) {
       CreateUserHwidDeviceCommand2.url = api_1.REST_API.HWID.CREATE_USER_HWID_DEVICE;
@@ -18419,9 +18448,9 @@ var require_delete_all_user_hwid_devices_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DeleteAllUserHwidDevicesCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var DeleteAllUserHwidDevicesCommand;
     (function(DeleteAllUserHwidDevicesCommand2) {
       DeleteAllUserHwidDevicesCommand2.url = api_1.REST_API.HWID.DELETE_ALL_USER_HWID_DEVICES;
@@ -18447,9 +18476,9 @@ var require_delete_user_hwid_device_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DeleteUserHwidDeviceCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var DeleteUserHwidDeviceCommand;
     (function(DeleteUserHwidDeviceCommand2) {
       DeleteUserHwidDeviceCommand2.url = api_1.REST_API.HWID.DELETE_USER_HWID_DEVICE;
@@ -18476,9 +18505,9 @@ var require_get_all_hwid_devices_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetAllHwidDevicesCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetAllHwidDevicesCommand;
     (function(GetAllHwidDevicesCommand2) {
       GetAllHwidDevicesCommand2.url = api_1.REST_API.HWID.GET_ALL_HWID_DEVICES;
@@ -18502,8 +18531,8 @@ var require_get_hwid_devices_stats_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetHwidDevicesStatsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetHwidDevicesStatsCommand;
     (function(GetHwidDevicesStatsCommand2) {
       GetHwidDevicesStatsCommand2.url = api_1.REST_API.HWID.STATS;
@@ -18513,11 +18542,11 @@ var require_get_hwid_devices_stats_command = __commonJS({
         response: zod_1.z.object({
           byPlatform: zod_1.z.array(zod_1.z.object({
             platform: zod_1.z.string(),
-            count: zod_1.z.number()
-          })),
-          byApp: zod_1.z.array(zod_1.z.object({
-            app: zod_1.z.string(),
-            count: zod_1.z.number()
+            count: zod_1.z.number(),
+            byApp: zod_1.z.array(zod_1.z.object({
+              app: zod_1.z.string(),
+              count: zod_1.z.number()
+            }))
           })),
           stats: zod_1.z.object({
             totalUniqueDevices: zod_1.z.number(),
@@ -18537,8 +18566,8 @@ var require_get_top_users_by_hwid_devices_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetTopUsersByHwidDevicesCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetTopUsersByHwidDevicesCommand;
     (function(GetTopUsersByHwidDevicesCommand2) {
       GetTopUsersByHwidDevicesCommand2.url = api_1.REST_API.HWID.TOP_USERS_BY_DEVICES;
@@ -18570,9 +18599,9 @@ var require_get_user_hwid_devices_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserHwidDevicesCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var GetUserHwidDevicesCommand;
     (function(GetUserHwidDevicesCommand2) {
       GetUserHwidDevicesCommand2.url = api_1.REST_API.HWID.GET_USER_HWID_DEVICES;
@@ -18629,9 +18658,9 @@ var require_create_bill_record_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CreateInfraBillingHistoryRecordCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var CreateInfraBillingHistoryRecordCommand;
     (function(CreateInfraBillingHistoryRecordCommand2) {
       CreateInfraBillingHistoryRecordCommand2.url = api_1.REST_API.INFRA_BILLING.CREATE_BILLING_HISTORY;
@@ -18661,9 +18690,9 @@ var require_create_billing_node_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CreateInfraBillingNodeCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var CreateInfraBillingNodeCommand;
     (function(CreateInfraBillingNodeCommand2) {
       CreateInfraBillingNodeCommand2.url = api_1.REST_API.INFRA_BILLING.CREATE_BILLING_NODE;
@@ -18671,10 +18700,11 @@ var require_create_billing_node_command = __commonJS({
       CreateInfraBillingNodeCommand2.endpointDetails = (0, constants_1.getEndpointDetails)(api_1.INFRA_BILLING_ROUTES.CREATE_BILLING_NODE, "post", "Create infra billing node", { scope: "create-billing-node", kind: "write" });
       CreateInfraBillingNodeCommand2.RequestSchema = zod_1.z.object({
         providerUuid: zod_1.z.string().uuid(),
-        nodeUuid: zod_1.z.string().uuid(),
+        nodeUuid: zod_1.z.string().uuid().nullable(),
+        name: zod_1.z.string().min(1).max(255).nullable(),
         nextBillingAt: zod_1.z.string({
           invalid_type_error: "Invalid date format"
-        }).datetime({ message: "Invalid date format", offset: true, local: true }).transform((str) => new Date(str)).optional().describe("Next billing date. Format: 2025-01-17T15:38:45.065Z")
+        }).datetime({ message: "Invalid date format", offset: true, local: true }).transform((str) => new Date(str)).describe("Next billing date. Format: 2025-01-17T15:38:45.065Z")
       });
       CreateInfraBillingNodeCommand2.ResponseSchema = zod_1.z.object({
         response: zod_1.z.object({
@@ -18727,9 +18757,9 @@ var require_delete_bill_record_by_uuid_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DeleteInfraBillingHistoryRecordCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var DeleteInfraBillingHistoryRecordCommand;
     (function(DeleteInfraBillingHistoryRecordCommand2) {
       DeleteInfraBillingHistoryRecordCommand2.url = api_1.REST_API.INFRA_BILLING.DELETE_BILLING_HISTORY;
@@ -18755,9 +18785,9 @@ var require_delete_billing_node_by_uuid_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DeleteInfraBillingNodeByUuidCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var DeleteInfraBillingNodeByUuidCommand;
     (function(DeleteInfraBillingNodeByUuidCommand2) {
       DeleteInfraBillingNodeByUuidCommand2.url = api_1.REST_API.INFRA_BILLING.DELETE_BILLING_NODE;
@@ -18816,9 +18846,9 @@ var require_get_bill_records_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetInfraBillingHistoryRecordsCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetInfraBillingHistoryRecordsCommand;
     (function(GetInfraBillingHistoryRecordsCommand2) {
       GetInfraBillingHistoryRecordsCommand2.url = api_1.REST_API.INFRA_BILLING.GET_BILLING_HISTORY;
@@ -18845,9 +18875,9 @@ var require_get_billing_nodes_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetInfraBillingNodesCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetInfraBillingNodesCommand;
     (function(GetInfraBillingNodesCommand2) {
       GetInfraBillingNodesCommand2.url = api_1.REST_API.INFRA_BILLING.GET_BILLING_NODES;
@@ -18927,9 +18957,9 @@ var require_update_billing_node_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UpdateInfraBillingNodeCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var UpdateInfraBillingNodeCommand;
     (function(UpdateInfraBillingNodeCommand2) {
       UpdateInfraBillingNodeCommand2.url = api_1.REST_API.INFRA_BILLING.UPDATE_BILLING_NODE;
@@ -19575,8 +19605,8 @@ var require_get_pubkey_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetPubKeyCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetPubKeyCommand;
     (function(GetPubKeyCommand2) {
       GetPubKeyCommand2.url = api_1.REST_API.KEYGEN.GET;
@@ -20091,9 +20121,9 @@ var require_get_torrent_blocker_reports_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetTorrentBlockerReportsCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetTorrentBlockerReportsCommand;
     (function(GetTorrentBlockerReportsCommand2) {
       GetTorrentBlockerReportsCommand2.url = api_1.REST_API.NODE_PLUGINS.TORRENT_BLOCKER.GET_REPORTS;
@@ -20117,9 +20147,9 @@ var require_truncate_torrent_blocker_reports_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.TruncateTorrentBlockerReportsCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var TruncateTorrentBlockerReportsCommand;
     (function(TruncateTorrentBlockerReportsCommand2) {
       TruncateTorrentBlockerReportsCommand2.url = api_1.REST_API.NODE_PLUGINS.TORRENT_BLOCKER.TRUNCATE_REPORTS;
@@ -20230,8 +20260,8 @@ var require_disable_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DisableNodeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var DisableNodeCommand;
     (function(DisableNodeCommand2) {
@@ -20255,8 +20285,8 @@ var require_enable_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.EnableNodeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var EnableNodeCommand;
     (function(EnableNodeCommand2) {
@@ -20280,8 +20310,8 @@ var require_reorder_command6 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ReorderNodeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var ReorderNodeCommand;
     (function(ReorderNodeCommand2) {
@@ -20308,8 +20338,8 @@ var require_reset_traffic_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ResetNodeTrafficCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var ResetNodeTrafficCommand;
     (function(ResetNodeTrafficCommand2) {
       ResetNodeTrafficCommand2.url = api_1.REST_API.NODES.ACTIONS.RESET_TRAFFIC;
@@ -20334,8 +20364,8 @@ var require_restart_all_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.RestartAllNodesCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var RestartAllNodesCommand;
     (function(RestartAllNodesCommand2) {
       RestartAllNodesCommand2.url = api_1.REST_API.NODES.ACTIONS.RESTART_ALL;
@@ -20360,8 +20390,8 @@ var require_restart_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.RestartNodeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var RestartNodeCommand;
     (function(RestartNodeCommand2) {
       RestartNodeCommand2.url = api_1.REST_API.NODES.ACTIONS.RESTART;
@@ -20419,8 +20449,8 @@ var require_actions_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkNodesActionsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkNodesActionsCommand;
     (function(BulkNodesActionsCommand2) {
       BulkNodesActionsCommand2.url = api_1.REST_API.NODES.BULK_ACTIONS.ACTIONS;
@@ -20446,8 +20476,8 @@ var require_bulk_update_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkNodesUpdateCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkNodesUpdateCommand;
     (function(BulkNodesUpdateCommand2) {
       BulkNodesUpdateCommand2.url = api_1.REST_API.NODES.BULK_ACTIONS.UPDATE;
@@ -20481,8 +20511,8 @@ var require_profile_modification_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkNodesProfileModificationCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkNodesProfileModificationCommand;
     (function(BulkNodesProfileModificationCommand2) {
       BulkNodesProfileModificationCommand2.url = api_1.REST_API.NODES.BULK_ACTIONS.PROFILE_MODIFICATION;
@@ -20540,8 +20570,8 @@ var require_create_command3 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CreateNodeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var CreateNodeCommand;
     (function(CreateNodeCommand2) {
@@ -20585,8 +20615,8 @@ var require_delete_command3 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DeleteNodeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var DeleteNodeCommand;
     (function(DeleteNodeCommand2) {
       DeleteNodeCommand2.url = api_1.REST_API.NODES.DELETE;
@@ -20611,8 +20641,8 @@ var require_get_all_command2 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetAllNodesCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var GetAllNodesCommand;
     (function(GetAllNodesCommand2) {
@@ -20636,8 +20666,8 @@ var require_get_one_command2 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetOneNodeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var GetOneNodeCommand;
     (function(GetOneNodeCommand2) {
@@ -20661,8 +20691,8 @@ var require_get_all_nodes_tags_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetAllNodesTagsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetAllNodesTagsCommand;
     (function(GetAllNodesTagsCommand2) {
       GetAllNodesTagsCommand2.url = api_1.REST_API.NODES.TAGS.GET;
@@ -20709,8 +20739,8 @@ var require_update_command2 = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UpdateNodeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var UpdateNodeCommand;
     (function(UpdateNodeCommand2) {
@@ -20967,8 +20997,8 @@ var require_get_remnawave_settings_command = __commonJS({
     exports.GetRemnawaveSettingsCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetRemnawaveSettingsCommand;
     (function(GetRemnawaveSettingsCommand2) {
       GetRemnawaveSettingsCommand2.url = api_1.REST_API.REMNAAWAVE_SETTINGS.GET;
@@ -20988,9 +21018,9 @@ var require_update_remnawave_settings_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UpdateRemnawaveSettingsCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var UpdateRemnawaveSettingsCommand;
     (function(UpdateRemnawaveSettingsCommand2) {
       UpdateRemnawaveSettingsCommand2.url = api_1.REST_API.REMNAAWAVE_SETTINGS.UPDATE;
@@ -21184,9 +21214,9 @@ var require_get_raw_subscription_by_short_uuid_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetRawSubscriptionByShortUuidCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetRawSubscriptionByShortUuidCommand;
     (function(GetRawSubscriptionByShortUuidCommand2) {
       GetRawSubscriptionByShortUuidCommand2.url = api_1.REST_API.SUBSCRIPTIONS.GET_BY.SHORT_UUID_RAW;
@@ -21228,8 +21258,8 @@ var require_get_subscription_by_short_uuid_by_client_type_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetSubscriptionByShortUuidByClientTypeCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetSubscriptionByShortUuidByClientTypeCommand;
     (function(GetSubscriptionByShortUuidByClientTypeCommand2) {
       GetSubscriptionByShortUuidByClientTypeCommand2.url = api_1.REST_API.SUBSCRIPTION.GET;
@@ -21271,8 +21301,8 @@ var require_get_subscription_info_by_short_uuid_command = __commonJS({
     exports.GetSubscriptionInfoByShortUuidCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionInfoByShortUuidCommand;
     (function(GetSubscriptionInfoByShortUuidCommand2) {
       GetSubscriptionInfoByShortUuidCommand2.url = api_1.REST_API.SUBSCRIPTION.GET_INFO;
@@ -21324,8 +21354,8 @@ var require_clone_subpage_config_command = __commonJS({
     exports.CloneSubscriptionPageConfigCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var CloneSubscriptionPageConfigCommand;
     (function(CloneSubscriptionPageConfigCommand2) {
       CloneSubscriptionPageConfigCommand2.url = api_1.REST_API.SUBSCRIPTION_PAGE_CONFIGS.ACTIONS.CLONE;
@@ -21351,8 +21381,8 @@ var require_reorder_command7 = __commonJS({
     exports.ReorderSubscriptionPageConfigsCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var ReorderSubscriptionPageConfigsCommand;
     (function(ReorderSubscriptionPageConfigsCommand2) {
       ReorderSubscriptionPageConfigsCommand2.url = api_1.REST_API.SUBSCRIPTION_PAGE_CONFIGS.ACTIONS.REORDER;
@@ -21408,8 +21438,8 @@ var require_create_subpage_config_command = __commonJS({
     exports.CreateSubscriptionPageConfigCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var CreateSubscriptionPageConfigCommand;
     (function(CreateSubscriptionPageConfigCommand2) {
       CreateSubscriptionPageConfigCommand2.url = api_1.REST_API.SUBSCRIPTION_PAGE_CONFIGS.CREATE;
@@ -21459,8 +21489,8 @@ var require_get_subpage_config_command = __commonJS({
     exports.GetSubscriptionPageConfigCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionPageConfigCommand;
     (function(GetSubscriptionPageConfigCommand2) {
       GetSubscriptionPageConfigCommand2.url = api_1.REST_API.SUBSCRIPTION_PAGE_CONFIGS.GET;
@@ -21486,8 +21516,8 @@ var require_get_subpage_configs_command = __commonJS({
     exports.GetSubscriptionPageConfigsCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionPageConfigsCommand;
     (function(GetSubscriptionPageConfigsCommand2) {
       GetSubscriptionPageConfigsCommand2.url = api_1.REST_API.SUBSCRIPTION_PAGE_CONFIGS.GET_ALL;
@@ -21511,8 +21541,8 @@ var require_update_subpage_config_command = __commonJS({
     exports.UpdateSubscriptionPageConfigCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var UpdateSubscriptionPageConfigCommand;
     (function(UpdateSubscriptionPageConfigCommand2) {
       UpdateSubscriptionPageConfigCommand2.url = api_1.REST_API.SUBSCRIPTION_PAGE_CONFIGS.UPDATE;
@@ -21599,9 +21629,9 @@ var require_get_subscription_request_history_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetSubscriptionRequestHistoryCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionRequestHistoryCommand;
     (function(GetSubscriptionRequestHistoryCommand2) {
       GetSubscriptionRequestHistoryCommand2.url = api_1.REST_API.SUBSCRIPTION_REQUEST_HISTORY.GET;
@@ -21652,8 +21682,8 @@ var require_get_subscription_settings_command = __commonJS({
     exports.GetSubscriptionSettingsCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionSettingsCommand;
     (function(GetSubscriptionSettingsCommand2) {
       GetSubscriptionSettingsCommand2.url = api_1.REST_API.SUBSCRIPTION_SETTINGS.GET;
@@ -21673,9 +21703,9 @@ var require_update_subscription_settings_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UpdateSubscriptionSettingsCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
     var api_1 = require_api();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var UpdateSubscriptionSettingsCommand;
     (function(UpdateSubscriptionSettingsCommand2) {
       UpdateSubscriptionSettingsCommand2.url = api_1.REST_API.SUBSCRIPTION_SETTINGS.UPDATE;
@@ -21738,8 +21768,8 @@ var require_reorder_command8 = __commonJS({
     exports.ReorderSubscriptionTemplateCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var ReorderSubscriptionTemplateCommand;
     (function(ReorderSubscriptionTemplateCommand2) {
       ReorderSubscriptionTemplateCommand2.url = api_1.REST_API.SUBSCRIPTION_TEMPLATE.ACTIONS.REORDER;
@@ -21793,8 +21823,8 @@ var require_create_template_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CreateSubscriptionTemplateCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var CreateSubscriptionTemplateCommand;
     (function(CreateSubscriptionTemplateCommand2) {
@@ -21846,8 +21876,8 @@ var require_get_template_command = __commonJS({
     exports.GetSubscriptionTemplateCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionTemplateCommand;
     (function(GetSubscriptionTemplateCommand2) {
       GetSubscriptionTemplateCommand2.url = api_1.REST_API.SUBSCRIPTION_TEMPLATE.GET;
@@ -21871,8 +21901,8 @@ var require_get_templates_command = __commonJS({
     exports.GetSubscriptionTemplatesCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionTemplatesCommand;
     (function(GetSubscriptionTemplatesCommand2) {
       GetSubscriptionTemplatesCommand2.url = api_1.REST_API.SUBSCRIPTION_TEMPLATE.GET_ALL;
@@ -21896,8 +21926,8 @@ var require_update_template_command = __commonJS({
     exports.UpdateSubscriptionTemplateCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var UpdateSubscriptionTemplateCommand;
     (function(UpdateSubscriptionTemplateCommand2) {
       UpdateSubscriptionTemplateCommand2.url = api_1.REST_API.SUBSCRIPTION_TEMPLATE.UPDATE;
@@ -21953,8 +21983,8 @@ var require_get_all_subscriptions_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetAllSubscriptionsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetAllSubscriptionsCommand;
     (function(GetAllSubscriptionsCommand2) {
       GetAllSubscriptionsCommand2.url = api_1.REST_API.SUBSCRIPTIONS.GET;
@@ -22030,8 +22060,8 @@ var require_get_subscription_by_short_uuid_protected_command = __commonJS({
     exports.GetSubscriptionByShortUuidProtectedCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionByShortUuidProtectedCommand;
     (function(GetSubscriptionByShortUuidProtectedCommand2) {
       GetSubscriptionByShortUuidProtectedCommand2.url = api_1.REST_API.SUBSCRIPTIONS.GET_BY.SHORT_UUID;
@@ -22055,8 +22085,8 @@ var require_get_subscription_by_username_command = __commonJS({
     exports.GetSubscriptionByUsernameCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionByUsernameCommand;
     (function(GetSubscriptionByUsernameCommand2) {
       GetSubscriptionByUsernameCommand2.url = api_1.REST_API.SUBSCRIPTIONS.GET_BY.USERNAME;
@@ -22080,8 +22110,8 @@ var require_get_subscription_by_uuid_command = __commonJS({
     exports.GetSubscriptionByUuidCommand = void 0;
     var zod_1 = require_zod();
     var api_1 = require_api();
-    var models_1 = require_models();
     var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetSubscriptionByUuidCommand;
     (function(GetSubscriptionByUuidCommand2) {
       GetSubscriptionByUuidCommand2.url = api_1.REST_API.SUBSCRIPTIONS.GET_BY.UUID;
@@ -22215,9 +22245,9 @@ var require_get_bandwidth_stats_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetBandwidthStatsCommand = void 0;
     var zod_1 = require_zod();
-    var base_stat_schema_1 = require_base_stat_schema();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
+    var base_stat_schema_1 = require_base_stat_schema();
     var GetBandwidthStatsCommand;
     (function(GetBandwidthStatsCommand2) {
       GetBandwidthStatsCommand2.url = api_1.REST_API.SYSTEM.STATS.BANDWIDTH_STATS;
@@ -22246,8 +22276,8 @@ var require_get_metadata_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetMetadataCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetMetadataCommand;
     (function(GetMetadataCommand2) {
       GetMetadataCommand2.url = api_1.REST_API.SYSTEM.METADATA;
@@ -22284,8 +22314,8 @@ var require_get_nodes_metrics_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetNodesMetricsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetNodesMetricsCommand;
     (function(GetNodesMetricsCommand2) {
       GetNodesMetricsCommand2.url = api_1.REST_API.SYSTEM.STATS.NODES_METRICS;
@@ -22323,8 +22353,8 @@ var require_get_nodes_statistics = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetNodesStatisticsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetNodesStatisticsCommand;
     (function(GetNodesStatisticsCommand2) {
       GetNodesStatisticsCommand2.url = api_1.REST_API.SYSTEM.STATS.NODES_STATS;
@@ -22353,8 +22383,8 @@ var require_get_recap_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetRecapCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetRecapCommand;
     (function(GetRecapCommand2) {
       GetRecapCommand2.url = api_1.REST_API.SYSTEM.STATS.RECAP;
@@ -22389,8 +22419,8 @@ var require_get_remnawave_health_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetRemnawaveHealthCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetRemnawaveHealthCommand;
     (function(GetRemnawaveHealthCommand2) {
       GetRemnawaveHealthCommand2.url = api_1.REST_API.SYSTEM.HEALTH;
@@ -22426,8 +22456,8 @@ var require_get_stats_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetStatsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var constants_2 = require_constants();
     var GetStatsCommand;
     (function(GetStatsCommand2) {
@@ -22476,9 +22506,9 @@ var require_test_srr_matcher_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.TestSrrMatcherCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var TestSrrMatcherCommand;
     (function(TestSrrMatcherCommand2) {
       TestSrrMatcherCommand2.url = api_1.REST_API.SYSTEM.TESTERS.SRR_MATCHER;
@@ -22525,32 +22555,6 @@ var require_testers = __commonJS({
   }
 });
 
-// node_modules/@remnawave/backend-contract/build/backend/commands/system/tools/encrypt-happ-cryptolink.command.js
-var require_encrypt_happ_cryptolink_command = __commonJS({
-  "node_modules/@remnawave/backend-contract/build/backend/commands/system/tools/encrypt-happ-cryptolink.command.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.EncryptHappCryptoLinkCommand = void 0;
-    var zod_1 = require_zod();
-    var constants_1 = require_constants();
-    var api_1 = require_api();
-    var EncryptHappCryptoLinkCommand;
-    (function(EncryptHappCryptoLinkCommand2) {
-      EncryptHappCryptoLinkCommand2.url = api_1.REST_API.SYSTEM.TOOLS.ENCRYPT_HAPP_CRYPTO_LINK;
-      EncryptHappCryptoLinkCommand2.TSQ_url = EncryptHappCryptoLinkCommand2.url;
-      EncryptHappCryptoLinkCommand2.endpointDetails = (0, constants_1.getEndpointDetails)(api_1.SYSTEM_ROUTES.TOOLS.ENCRYPT_HAPP_CRYPTO_LINK, "post", "Encrypt Happ Crypto Link", { scope: "encrypt-happ-crypto-link", kind: "read" });
-      EncryptHappCryptoLinkCommand2.RequestSchema = zod_1.z.object({
-        linkToEncrypt: zod_1.z.string().url()
-      });
-      EncryptHappCryptoLinkCommand2.ResponseSchema = zod_1.z.object({
-        response: zod_1.z.object({
-          encryptedLink: zod_1.z.string()
-        })
-      });
-    })(EncryptHappCryptoLinkCommand || (exports.EncryptHappCryptoLinkCommand = EncryptHappCryptoLinkCommand = {}));
-  }
-});
-
 // node_modules/@remnawave/backend-contract/build/backend/commands/system/tools/generate-x25519.command.js
 var require_generate_x25519_command = __commonJS({
   "node_modules/@remnawave/backend-contract/build/backend/commands/system/tools/generate-x25519.command.js"(exports) {
@@ -22558,8 +22562,8 @@ var require_generate_x25519_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GenerateX25519Command = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GenerateX25519Command;
     (function(GenerateX25519Command2) {
       GenerateX25519Command2.url = api_1.REST_API.SYSTEM.TOOLS.GENERATE_X25519;
@@ -22598,7 +22602,6 @@ var require_tools = __commonJS({
       for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports2, p)) __createBinding(exports2, m, p);
     };
     Object.defineProperty(exports, "__esModule", { value: true });
-    __exportStar(require_encrypt_happ_cryptolink_command(), exports);
     __exportStar(require_generate_x25519_command(), exports);
   }
 });
@@ -22643,9 +22646,9 @@ var require_disable_user_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DisableUserCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var DisableUserCommand;
     (function(DisableUserCommand2) {
       DisableUserCommand2.url = api_1.REST_API.USERS.ACTIONS.DISABLE;
@@ -22668,9 +22671,9 @@ var require_enable_user_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.EnableUserCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var EnableUserCommand;
     (function(EnableUserCommand2) {
       EnableUserCommand2.url = api_1.REST_API.USERS.ACTIONS.ENABLE;
@@ -22693,9 +22696,9 @@ var require_reset_user_traffic_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ResetUserTrafficCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var ResetUserTrafficCommand;
     (function(ResetUserTrafficCommand2) {
       ResetUserTrafficCommand2.url = api_1.REST_API.USERS.ACTIONS.RESET_TRAFFIC;
@@ -22718,9 +22721,9 @@ var require_revoke_user_subscription_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.RevokeUserSubscriptionCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var RevokeUserSubscriptionCommand;
     (function(RevokeUserSubscriptionCommand2) {
       RevokeUserSubscriptionCommand2.url = api_1.REST_API.USERS.ACTIONS.REVOKE_SUBSCRIPTION;
@@ -22775,8 +22778,8 @@ var require_bulk_delete_users_by_status_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkDeleteUsersByStatusCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var models_1 = require_models();
     var BulkDeleteUsersByStatusCommand;
     (function(BulkDeleteUsersByStatusCommand2) {
@@ -22802,8 +22805,8 @@ var require_bulk_delete_users_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkDeleteUsersCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkDeleteUsersCommand;
     (function(BulkDeleteUsersCommand2) {
       BulkDeleteUsersCommand2.url = api_1.REST_API.USERS.BULK.DELETE;
@@ -22828,8 +22831,8 @@ var require_bulk_extend_expiration_date_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkExtendExpirationDateCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkExtendExpirationDateCommand;
     (function(BulkExtendExpirationDateCommand2) {
       BulkExtendExpirationDateCommand2.url = api_1.REST_API.USERS.BULK.EXTEND_EXPIRATION_DATE;
@@ -22855,8 +22858,8 @@ var require_bulk_reset_traffic_users_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkResetTrafficUsersCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkResetTrafficUsersCommand;
     (function(BulkResetTrafficUsersCommand2) {
       BulkResetTrafficUsersCommand2.url = api_1.REST_API.USERS.BULK.RESET_TRAFFIC;
@@ -22881,8 +22884,8 @@ var require_bulk_revoke_users_subscription_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkRevokeUsersSubscriptionCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkRevokeUsersSubscriptionCommand;
     (function(BulkRevokeUsersSubscriptionCommand2) {
       BulkRevokeUsersSubscriptionCommand2.url = api_1.REST_API.USERS.BULK.REVOKE_SUBSCRIPTION;
@@ -22907,8 +22910,8 @@ var require_bulk_update_users_squads_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkUpdateUsersSquadsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkUpdateUsersSquadsCommand;
     (function(BulkUpdateUsersSquadsCommand2) {
       BulkUpdateUsersSquadsCommand2.url = api_1.REST_API.USERS.BULK.UPDATE_SQUADS;
@@ -22936,8 +22939,8 @@ var require_bulk_update_users_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkUpdateUsersCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var constants_2 = require_constants();
     var models_1 = require_models();
     var BulkUpdateUsersCommand;
@@ -23013,8 +23016,8 @@ var require_bulk_all_extend_expiration_date_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkAllExtendExpirationDateCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkAllExtendExpirationDateCommand;
     (function(BulkAllExtendExpirationDateCommand2) {
       BulkAllExtendExpirationDateCommand2.url = api_1.REST_API.USERS.BULK.ALL.EXTEND_EXPIRATION_DATE;
@@ -23039,8 +23042,8 @@ var require_bulk_all_reset_traffic_users_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkAllResetTrafficUsersCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var BulkAllResetTrafficUsersCommand;
     (function(BulkAllResetTrafficUsersCommand2) {
       BulkAllResetTrafficUsersCommand2.url = api_1.REST_API.USERS.BULK.ALL.RESET_TRAFFIC;
@@ -23062,8 +23065,8 @@ var require_bulk_all_update_users_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.BulkAllUpdateUsersCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var constants_2 = require_constants();
     var models_1 = require_models();
     var BulkAllUpdateUsersCommand;
@@ -23131,9 +23134,9 @@ var require_create_user_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.CreateUserCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var CreateUserCommand;
     (function(CreateUserCommand2) {
       CreateUserCommand2.url = api_1.REST_API.USERS.CREATE;
@@ -23206,8 +23209,8 @@ var require_delete_user_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.DeleteUserCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var DeleteUserCommand;
     (function(DeleteUserCommand2) {
       DeleteUserCommand2.url = api_1.REST_API.USERS.DELETE;
@@ -23232,14 +23235,14 @@ var require_get_all_users_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetAllUsersCommand = void 0;
     var zod_1 = require_zod();
-    var models_1 = require_models();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
+    var models_1 = require_models();
     var GetAllUsersCommand;
     (function(GetAllUsersCommand2) {
       GetAllUsersCommand2.url = api_1.REST_API.USERS.GET;
       GetAllUsersCommand2.TSQ_url = GetAllUsersCommand2.url;
-      GetAllUsersCommand2.endpointDetails = (0, constants_1.getEndpointDetails)(api_1.USERS_ROUTES.GET, "get", "Get all users", {
+      GetAllUsersCommand2.endpointDetails = (0, constants_1.getEndpointDetails)(api_1.USERS_ROUTES.GET, "get", "Get all users using offset-based pagination", {
         scope: "list",
         kind: "read"
       });
@@ -23261,9 +23264,9 @@ var require_get_user_by_email_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserByEmailCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var GetUserByEmailCommand;
     (function(GetUserByEmailCommand2) {
       GetUserByEmailCommand2.url = api_1.REST_API.USERS.GET_BY.EMAIL;
@@ -23286,9 +23289,9 @@ var require_get_user_by_id_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserByIdCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var GetUserByIdCommand;
     (function(GetUserByIdCommand2) {
       GetUserByIdCommand2.url = api_1.REST_API.USERS.GET_BY.ID;
@@ -23311,9 +23314,9 @@ var require_get_user_by_short_uuid_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserByShortUuidCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var GetUserByShortUuidCommand;
     (function(GetUserByShortUuidCommand2) {
       GetUserByShortUuidCommand2.url = api_1.REST_API.USERS.GET_BY.SHORT_UUID;
@@ -23336,9 +23339,9 @@ var require_get_user_by_tag_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserByTagCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var GetUserByTagCommand;
     (function(GetUserByTagCommand2) {
       GetUserByTagCommand2.url = api_1.REST_API.USERS.GET_BY.TAG;
@@ -23361,9 +23364,9 @@ var require_get_user_by_telegram_id_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserByTelegramIdCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var GetUserByTelegramIdCommand;
     (function(GetUserByTelegramIdCommand2) {
       GetUserByTelegramIdCommand2.url = api_1.REST_API.USERS.GET_BY.TELEGRAM_ID;
@@ -23386,9 +23389,9 @@ var require_get_user_by_username_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserByUsernameCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var GetUserByUsernameCommand;
     (function(GetUserByUsernameCommand2) {
       GetUserByUsernameCommand2.url = api_1.REST_API.USERS.GET_BY.USERNAME;
@@ -23441,8 +23444,8 @@ var require_get_user_accessible_nodes_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserAccessibleNodesCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetUserAccessibleNodesCommand;
     (function(GetUserAccessibleNodesCommand2) {
       GetUserAccessibleNodesCommand2.url = api_1.REST_API.USERS.ACCESSIBLE_NODES;
@@ -23478,9 +23481,9 @@ var require_get_user_by_uuid_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserByUuidCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var GetUserByUuidCommand;
     (function(GetUserByUuidCommand2) {
       GetUserByUuidCommand2.url = api_1.REST_API.USERS.GET_BY_UUID;
@@ -23503,8 +23506,8 @@ var require_get_user_subscription_request_history_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetUserSubscriptionRequestHistoryCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetUserSubscriptionRequestHistoryCommand;
     (function(GetUserSubscriptionRequestHistoryCommand2) {
       GetUserSubscriptionRequestHistoryCommand2.url = api_1.REST_API.USERS.SUBSCRIPTION_REQUEST_HISTORY;
@@ -23529,6 +23532,36 @@ var require_get_user_subscription_request_history_command = __commonJS({
   }
 });
 
+// node_modules/@remnawave/backend-contract/build/backend/commands/users/get-users-stream.command.js
+var require_get_users_stream_command = __commonJS({
+  "node_modules/@remnawave/backend-contract/build/backend/commands/users/get-users-stream.command.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.GetUsersStreamCommand = void 0;
+    var zod_1 = require_zod();
+    var api_1 = require_api();
+    var constants_1 = require_constants();
+    var models_1 = require_models();
+    var GetUsersStreamCommand;
+    (function(GetUsersStreamCommand2) {
+      GetUsersStreamCommand2.url = api_1.REST_API.USERS.STREAM;
+      GetUsersStreamCommand2.TSQ_url = GetUsersStreamCommand2.url;
+      GetUsersStreamCommand2.endpointDetails = (0, constants_1.getEndpointDetails)(api_1.USERS_ROUTES.STREAM, "get", "Get all users using cursor-based (keyset) pagination", { scope: "stream", kind: "read" });
+      GetUsersStreamCommand2.RequestQuerySchema = zod_1.z.object({
+        cursor: zod_1.z.string().regex(/^\d+$/, "Cursor must be a positive integer string").optional().describe("Cursor for pagination \u2014 pass the nextCursor from the previous response. Omit on the first request."),
+        size: zod_1.z.coerce.number().int().min(1, "Size (limit) must be greater than 0").max(1e3, "Size (limit) must be less than 1000").describe("Number of results to return, no more than 1000").default(250)
+      });
+      GetUsersStreamCommand2.ResponseSchema = zod_1.z.object({
+        response: zod_1.z.object({
+          users: zod_1.z.array(models_1.ExtendedUsersSchema),
+          nextCursor: zod_1.z.string().nullable().describe("Cursor to fetch the next page, or null if there are no more results"),
+          hasMore: zod_1.z.boolean().describe("Whether there are more results to fetch")
+        })
+      });
+    })(GetUsersStreamCommand || (exports.GetUsersStreamCommand = GetUsersStreamCommand = {}));
+  }
+});
+
 // node_modules/@remnawave/backend-contract/build/backend/commands/users/resolve-user.command.js
 var require_resolve_user_command = __commonJS({
   "node_modules/@remnawave/backend-contract/build/backend/commands/users/resolve-user.command.js"(exports) {
@@ -23536,8 +23569,8 @@ var require_resolve_user_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.ResolveUserCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var ResolveUserCommand;
     (function(ResolveUserCommand2) {
       ResolveUserCommand2.url = api_1.REST_API.USERS.RESOLVE;
@@ -23573,8 +23606,8 @@ var require_get_all_tags_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.GetAllTagsCommand = void 0;
     var zod_1 = require_zod();
-    var constants_1 = require_constants();
     var api_1 = require_api();
+    var constants_1 = require_constants();
     var GetAllTagsCommand;
     (function(GetAllTagsCommand2) {
       GetAllTagsCommand2.url = api_1.REST_API.USERS.TAGS.GET;
@@ -23621,9 +23654,9 @@ var require_update_user_command = __commonJS({
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.UpdateUserCommand = void 0;
     var zod_1 = require_zod();
+    var api_1 = require_api();
     var constants_1 = require_constants();
     var models_1 = require_models();
-    var api_1 = require_api();
     var UpdateUserCommand;
     (function(UpdateUserCommand2) {
       UpdateUserCommand2.url = api_1.REST_API.USERS.UPDATE;
@@ -23704,6 +23737,7 @@ var require_users4 = __commonJS({
     __exportStar(require_get_user_accessible_nodes_command(), exports);
     __exportStar(require_get_user_by_uuid_command(), exports);
     __exportStar(require_get_user_subscription_request_history_command(), exports);
+    __exportStar(require_get_users_stream_command(), exports);
     __exportStar(require_resolve_user_command(), exports);
     __exportStar(require_tags3(), exports);
     __exportStar(require_update_user_command(), exports);
@@ -38308,6 +38342,13 @@ var RemnawaveClient = class {
       `${import_backend_contract.REST_API.USERS.GET}?start=${start}&size=${size}`
     );
   }
+  async streamUsers(cursor, size = 25) {
+    const params = new URLSearchParams({ size: String(size) });
+    if (cursor) {
+      params.set("cursor", cursor);
+    }
+    return this.get(`${import_backend_contract.REST_API.USERS.STREAM}?${params.toString()}`);
+  }
   async getUserByUuid(uuid2) {
     return this.get(import_backend_contract.REST_API.USERS.GET_BY_UUID(uuid2));
   }
@@ -38852,6 +38893,22 @@ function registerUserTools(server, client, readonly2) {
     async ({ start, size }) => {
       try {
         const result = await client.getUsers(start, size);
+        return toolResult(result);
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "users_stream",
+    "List Remnawave users with cursor pagination",
+    {
+      cursor: external_exports.string().optional().describe("Cursor from the previous page"),
+      size: external_exports.number().default(25).describe("Number of users to return")
+    },
+    async ({ cursor, size }) => {
+      try {
+        const result = await client.streamUsers(cursor, size);
         return toolResult(result);
       } catch (e) {
         return toolError(e);
@@ -41378,7 +41435,7 @@ function registerAllPrompts(server) {
 function createServer(config2) {
   const server = new McpServer({
     name: "remnawave-mcp",
-    version: "1.0.0"
+    version: "1.4.0"
   });
   const client = new RemnawaveClient(config2);
   registerAllTools(server, client, config2.readonly);

@@ -10,14 +10,14 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 1.3.0 | **Remnawave API:** 2.7.4
+**Version:** 1.4.0 | **Remnawave panel:** 2.8.0–2.8.1 | **Contract:** `@remnawave/backend-contract` 2.8.35
 
 ### Features
 
-- **153 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, IP control, and metadata
+- **154 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, IP control, and metadata
 - **3 resources** — real-time panel stats, node status, health checks
 - **5 prompts** — guided workflows for common tasks
-- **Readonly mode** — restrict to 69 read-only tools for safe monitoring
+- **Readonly mode** — restrict to 70 read-only tools for safe monitoring
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
 - **stdio transport** — works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible client
@@ -97,11 +97,11 @@ Set `REMNAWAVE_READONLY=true` to disable all write operations (create, update, d
 
 Useful for monitoring dashboards or shared environments where you want to prevent accidental changes.
 
-In readonly mode, the available tools are reduced from 153 to 69:
+In readonly mode, the available tools are reduced from 154 to 70:
 
 | Category | Available tools |
 |----------|----------------|
-| Users (10) | `users_list`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
+| Users (11) | `users_list`, `users_stream`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
 | Nodes (3) | `nodes_list`, `nodes_get`, `nodes_tags_list` |
 | Hosts (3) | `hosts_list`, `hosts_get`, `hosts_tags_list` |
 | System (10) | all tools (read-only by nature) |
@@ -141,11 +141,12 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 
 ### Available Tools
 
-#### Users (27 tools)
+#### Users (28 tools)
 
 | Tool | Description | Mode |
 |------|-------------|------|
 | `users_list` | List all users with pagination | read |
+| `users_stream` | List users with cursor pagination | read |
 | `users_get` | Get user by UUID | read |
 | `users_get_by_username` | Get user by username | read |
 | `users_get_by_short_uuid` | Get user by short UUID | read |
@@ -429,7 +430,7 @@ src/
 ├── tools/
 │   ├── helpers.ts                 # Result formatting helpers
 │   ├── index.ts                   # Tool registration
-│   ├── users.ts                   # User management (27 tools)
+│   ├── users.ts                   # User management (28 tools)
 │   ├── nodes.ts                   # Node management (15 tools)
 │   ├── hosts.ts                   # Host management (11 tools)
 │   ├── system.ts                  # System & auth (10 tools)
@@ -465,14 +466,14 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 1.3.0 | **Remnawave API:** 2.7.4
+**Версия:** 1.4.0 | **Панель Remnawave:** 2.8.0–2.8.1 | **Контракт:** `@remnawave/backend-contract` 2.8.35
 
 ### Возможности
 
-- **153 инструмента** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, IP-контролем и метаданными
+- **154 инструмента** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, IP-контролем и метаданными
 - **3 ресурса** — статистика панели, статус нод, проверка здоровья в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
-- **Readonly-режим** — ограничение до 69 инструментов только для чтения
+- **Readonly-режим** — ограничение до 70 инструментов только для чтения
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
 - **stdio транспорт** — работает с Claude Desktop, Cursor, Windsurf и любым MCP-совместимым клиентом
@@ -552,11 +553,11 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Полезно для мониторинговых дашбордов или общих окружений, где нужно исключить случайные изменения.
 
-В readonly-режиме количество доступных инструментов сокращается с 153 до 69:
+В readonly-режиме количество доступных инструментов сокращается с 154 до 70:
 
 | Категория | Доступные инструменты |
 |-----------|----------------------|
-| Пользователи (10) | `users_list`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
+| Пользователи (11) | `users_list`, `users_stream`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
 | Ноды (3) | `nodes_list`, `nodes_get`, `nodes_tags_list` |
 | Хосты (3) | `hosts_list`, `hosts_get`, `hosts_tags_list` |
 | Система (10) | все инструменты (только чтение по природе) |
@@ -596,11 +597,12 @@ npm run build
 
 ### Доступные инструменты
 
-#### Пользователи (27 инструментов)
+#### Пользователи (28 инструментов)
 
 | Инструмент | Описание | Режим |
 |------------|----------|-------|
 | `users_list` | Список пользователей с пагинацией | read |
+| `users_stream` | Список пользователей с cursor-пагинацией | read |
 | `users_get` | Получить пользователя по UUID | read |
 | `users_get_by_username` | Получить пользователя по username | read |
 | `users_get_by_short_uuid` | Получить пользователя по short UUID | read |
@@ -884,7 +886,7 @@ src/
 ├── tools/
 │   ├── helpers.ts                 # Хелперы форматирования
 │   ├── index.ts                   # Регистрация инструментов
-│   ├── users.ts                   # Управление пользователями (27)
+│   ├── users.ts                   # Управление пользователями (28)
 │   ├── nodes.ts                   # Управление нодами (15)
 │   ├── hosts.ts                   # Управление хостами (11)
 │   ├── system.ts                  # Система и авторизация (10)
