@@ -22,6 +22,23 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient, re
     );
 
     server.tool(
+        'users_stream',
+        'List Remnawave users with cursor pagination',
+        {
+            cursor: z.string().optional().describe('Cursor from the previous page'),
+            size: z.number().default(25).describe('Number of users to return'),
+        },
+        async ({ cursor, size }) => {
+            try {
+                const result = await client.streamUsers(cursor, size);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'users_get',
         'Get a specific Remnawave user by their UUID',
         {

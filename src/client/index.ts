@@ -82,6 +82,14 @@ export class RemnawaveClient {
         );
     }
 
+    async streamUsers(cursor?: string, size = 25) {
+        const params = new URLSearchParams({ size: String(size) });
+        if (cursor) {
+            params.set('cursor', cursor);
+        }
+        return this.get(`${REST_API.USERS.STREAM}?${params.toString()}`);
+    }
+
     async getUserByUuid(uuid: string) {
         return this.get(REST_API.USERS.GET_BY_UUID(uuid));
     }

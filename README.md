@@ -10,17 +10,17 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 1.2.0 | **Remnawave API:** 2.7.4
+**Version:** 1.4.0 | **Remnawave panel:** 2.8.0–2.8.1 | **Contract:** `@remnawave/backend-contract` 2.8.35
 
 ### Features
 
-- **153 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, IP control, and metadata
+- **154 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, IP control, and metadata
 - **3 resources** — real-time panel stats, node status, health checks
 - **5 prompts** — guided workflows for common tasks
-- **Readonly mode** — restrict to 69 read-only tools for safe monitoring
+- **Readonly mode** — restrict to 70 read-only tools for safe monitoring
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
-- **stdio transport** — works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible client
+- **stdio transport** — works with Cursor, Codex, OpenCode, Claude Desktop, Windsurf, and any MCP-compatible client
 
 ### Requirements
 
@@ -29,16 +29,97 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 
 ### Installation
 
+No clone, no build, no local path. Use `npx` in your MCP client.
+
+Optional env vars besides the two required ones: `REMNAWAVE_API_KEY` (Caddy), `REMNAWAVE_READONLY` (`true` for read-only).
+
+#### Cursor
+
+Project: `.cursor/mcp.json`. Global: `~/.cursor/mcp.json`. Or **Cursor Settings → MCP**.
+
+```json
+{
+  "mcpServers": {
+    "remnawave": {
+      "command": "npx",
+      "args": ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "env": {
+        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
+        "REMNAWAVE_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}
+```
+
+#### Codex
+
+CLI / IDE / ChatGPT desktop share `~/.codex/config.toml` (or project `.codex/config.toml`):
+
+```toml
+[mcp_servers.remnawave]
+command = "npx"
+args = ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"]
+
+[mcp_servers.remnawave.env]
+REMNAWAVE_BASE_URL = "https://vpn.example.com"
+REMNAWAVE_API_TOKEN = "your-api-token-here"
+```
+
+Or:
+
 ```bash
-git clone https://github.com/TrackLine/mcp-remnawave.git
-cd mcp-remnawave
-npm install
-npm run build
+codex mcp add remnawave -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
+```
+
+Then add the `env` table in `config.toml`. Check with `codex mcp list`.
+
+#### OpenCode
+
+Project: `opencode.json` / `opencode.jsonc`. Global: `~/.config/opencode/opencode.json`.
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "remnawave": {
+      "type": "local",
+      "command": ["npx", "-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "environment": {
+        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
+        "REMNAWAVE_API_TOKEN": "your-api-token-here"
+      },
+      "enabled": true,
+      "timeout": 60000
+    }
+  }
+}
+```
+
+`timeout` is in ms. First `npx git+https` fetch can be slow, so 60s is safer than the 5s default.
+
+#### Other clients
+
+| Client | Config file |
+|--------|-------------|
+| Windsurf | `.windsurf/mcp.json` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
+| VS Code Copilot | `.vscode/mcp.json` |
+
+Same JSON shape as Cursor (`mcpServers` + `command` / `args` / `env`).
+
+Claude Code:
+
+```bash
+claude mcp add remnawave \
+  -e REMNAWAVE_BASE_URL=https://vpn.example.com \
+  -e REMNAWAVE_API_TOKEN=your-api-token-here \
+  -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
 ```
 
 ### Configuration
 
-Create a `.env` file or pass environment variables:
+Same variables can be put in a `.env` file for Docker or local development:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -69,11 +150,11 @@ Set `REMNAWAVE_READONLY=true` to disable all write operations (create, update, d
 
 Useful for monitoring dashboards or shared environments where you want to prevent accidental changes.
 
-In readonly mode, the available tools are reduced from 153 to 69:
+In readonly mode, the available tools are reduced from 154 to 70:
 
 | Category | Available tools |
 |----------|----------------|
-| Users (10) | `users_list`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
+| Users (11) | `users_list`, `users_stream`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
 | Nodes (3) | `nodes_list`, `nodes_get`, `nodes_tags_list` |
 | Hosts (3) | `hosts_list`, `hosts_get`, `hosts_tags_list` |
 | System (10) | all tools (read-only by nature) |
@@ -92,64 +173,33 @@ In readonly mode, the available tools are reduced from 153 to 69:
 | IP Control (4) | `ip_control_fetch_ips`, `ip_control_get_fetch_ips_result`, `ip_control_fetch_users_ips`, `ip_control_get_fetch_users_ips_result` |
 | Metadata (2) | `metadata_node_get`, `metadata_user_get` |
 
-### Usage with Claude Desktop
-
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
-
-```json
-{
-  "mcpServers": {
-    "remnawave": {
-      "command": "node",
-      "args": ["/absolute/path/to/remnawave-mcp/dist/index.js"],
-      "env": {
-        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
-        "REMNAWAVE_API_TOKEN": "your-api-token-here",
-        "REMNAWAVE_API_KEY": "your-caddy-api-key",
-        "REMNAWAVE_READONLY": "false"
-      }
-    }
-  }
-}
-```
-
-### Usage with Cursor / Windsurf
-
-Add to `.cursor/mcp.json` or `.windsurf/mcp.json` in your project:
-
-```json
-{
-  "mcpServers": {
-    "remnawave": {
-      "command": "node",
-      "args": ["/absolute/path/to/remnawave-mcp/dist/index.js"],
-      "env": {
-        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
-        "REMNAWAVE_API_TOKEN": "your-api-token-here",
-        "REMNAWAVE_API_KEY": "your-caddy-api-key",
-        "REMNAWAVE_READONLY": "false"
-      }
-    }
-  }
-}
-```
-
 ### Docker
 
 ```bash
-npm run build
 docker compose up -d
 ```
 
 Environment variables are passed via `.env` file or `docker-compose.yml`.
 
+### Development (from source)
+
+```bash
+git clone https://github.com/erruqie/remnawave_mcp.git
+cd remnawave_mcp
+npm install
+npm run build
+```
+
+After changing TypeScript sources, run `npm run build` and commit the updated `dist/index.js` so `npx git+https://...` keeps working.
+
 ### Available Tools
 
-#### Users (27 tools)
+#### Users (28 tools)
 
 | Tool | Description | Mode |
 |------|-------------|------|
 | `users_list` | List all users with pagination | read |
+| `users_stream` | List users with cursor pagination | read |
 | `users_get` | Get user by UUID | read |
 | `users_get_by_username` | Get user by username | read |
 | `users_get_by_short_uuid` | Get user by short UUID | read |
@@ -433,7 +483,7 @@ src/
 ├── tools/
 │   ├── helpers.ts                 # Result formatting helpers
 │   ├── index.ts                   # Tool registration
-│   ├── users.ts                   # User management (27 tools)
+│   ├── users.ts                   # User management (28 tools)
 │   ├── nodes.ts                   # Node management (15 tools)
 │   ├── hosts.ts                   # Host management (11 tools)
 │   ├── system.ts                  # System & auth (10 tools)
@@ -469,17 +519,17 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 1.2.0 | **Remnawave API:** 2.7.4
+**Версия:** 1.4.0 | **Панель Remnawave:** 2.8.0–2.8.1 | **Контракт:** `@remnawave/backend-contract` 2.8.35
 
 ### Возможности
 
-- **153 инструмента** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, IP-контролем и метаданными
+- **154 инструмента** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, IP-контролем и метаданными
 - **3 ресурса** — статистика панели, статус нод, проверка здоровья в реальном времени
 - **5 промптов** — пошаговые сценарии для типичных задач
-- **Readonly-режим** — ограничение до 69 инструментов только для чтения
+- **Readonly-режим** — ограничение до 70 инструментов только для чтения
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
-- **stdio транспорт** — работает с Claude Desktop, Cursor, Windsurf и любым MCP-совместимым клиентом
+- **stdio транспорт** — работает с Cursor, Codex, OpenCode, Claude Desktop, Windsurf и любым MCP-совместимым клиентом
 
 ### Требования
 
@@ -488,16 +538,97 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 
 ### Установка
 
+Клонировать репозиторий и собирать ничего не нужно. В MCP-клиенте достаточно `npx`.
+
+Необязательные переменные кроме двух обязательных: `REMNAWAVE_API_KEY` (Caddy), `REMNAWAVE_READONLY` (`true` для режима только чтения).
+
+#### Cursor
+
+Проект: `.cursor/mcp.json`. Глобально: `~/.cursor/mcp.json`. Или **Settings → MCP**.
+
+```json
+{
+  "mcpServers": {
+    "remnawave": {
+      "command": "npx",
+      "args": ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "env": {
+        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
+        "REMNAWAVE_API_TOKEN": "ваш-api-токен"
+      }
+    }
+  }
+}
+```
+
+#### Codex
+
+CLI / IDE / ChatGPT desktop читают `~/.codex/config.toml` (или проектный `.codex/config.toml`):
+
+```toml
+[mcp_servers.remnawave]
+command = "npx"
+args = ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"]
+
+[mcp_servers.remnawave.env]
+REMNAWAVE_BASE_URL = "https://vpn.example.com"
+REMNAWAVE_API_TOKEN = "ваш-api-токен"
+```
+
+Или:
+
 ```bash
-git clone https://github.com/TrackLine/mcp-remnawave.git
-cd mcp-remnawave
-npm install
-npm run build
+codex mcp add remnawave -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
+```
+
+Потом допишите таблицу `env` в `config.toml`. Проверка: `codex mcp list`.
+
+#### OpenCode
+
+Проект: `opencode.json` / `opencode.jsonc`. Глобально: `~/.config/opencode/opencode.json`.
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "remnawave": {
+      "type": "local",
+      "command": ["npx", "-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "environment": {
+        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
+        "REMNAWAVE_API_TOKEN": "ваш-api-токен"
+      },
+      "enabled": true,
+      "timeout": 60000
+    }
+  }
+}
+```
+
+`timeout` в миллисекундах. Первый `npx git+https` может быть долгим, 60 с надёжнее дефолтных 5 с.
+
+#### Другие клиенты
+
+| Клиент | Файл конфигурации |
+|--------|-------------------|
+| Windsurf | `.windsurf/mcp.json` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
+| VS Code Copilot | `.vscode/mcp.json` |
+
+Тот же JSON, что у Cursor (`mcpServers` + `command` / `args` / `env`).
+
+Claude Code:
+
+```bash
+claude mcp add remnawave \
+  -e REMNAWAVE_BASE_URL=https://vpn.example.com \
+  -e REMNAWAVE_API_TOKEN=ваш-api-токен \
+  -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
 ```
 
 ### Конфигурация
 
-Создайте файл `.env` или передайте переменные окружения:
+Те же переменные можно положить в `.env` для Docker или локальной разработки:
 
 | Переменная | Обязательная | Описание |
 |------------|-------------|----------|
@@ -528,11 +659,11 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Полезно для мониторинговых дашбордов или общих окружений, где нужно исключить случайные изменения.
 
-В readonly-режиме количество доступных инструментов сокращается с 153 до 69:
+В readonly-режиме количество доступных инструментов сокращается с 154 до 70:
 
 | Категория | Доступные инструменты |
 |-----------|----------------------|
-| Пользователи (10) | `users_list`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
+| Пользователи (11) | `users_list`, `users_stream`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
 | Ноды (3) | `nodes_list`, `nodes_get`, `nodes_tags_list` |
 | Хосты (3) | `hosts_list`, `hosts_get`, `hosts_tags_list` |
 | Система (10) | все инструменты (только чтение по природе) |
@@ -551,64 +682,33 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 | IP-контроль (4) | `ip_control_fetch_ips`, `ip_control_get_fetch_ips_result`, `ip_control_fetch_users_ips`, `ip_control_get_fetch_users_ips_result` |
 | Метаданные (2) | `metadata_node_get`, `metadata_user_get` |
 
-### Использование с Claude Desktop
-
-Добавьте в конфигурацию Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json` на macOS):
-
-```json
-{
-  "mcpServers": {
-    "remnawave": {
-      "command": "node",
-      "args": ["/абсолютный/путь/к/remnawave-mcp/dist/index.js"],
-      "env": {
-        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
-        "REMNAWAVE_API_TOKEN": "ваш-api-токен",
-        "REMNAWAVE_API_KEY": "ваш-caddy-api-ключ",
-        "REMNAWAVE_READONLY": "false"
-      }
-    }
-  }
-}
-```
-
-### Использование с Cursor / Windsurf
-
-Добавьте в `.cursor/mcp.json` или `.windsurf/mcp.json` вашего проекта:
-
-```json
-{
-  "mcpServers": {
-    "remnawave": {
-      "command": "node",
-      "args": ["/абсолютный/путь/к/remnawave-mcp/dist/index.js"],
-      "env": {
-        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
-        "REMNAWAVE_API_TOKEN": "ваш-api-токен",
-        "REMNAWAVE_API_KEY": "ваш-caddy-api-ключ",
-        "REMNAWAVE_READONLY": "false"
-      }
-    }
-  }
-}
-```
-
 ### Docker
 
 ```bash
-npm run build
 docker compose up -d
 ```
 
 Переменные окружения передаются через `.env` файл или `docker-compose.yml`.
 
+### Разработка (из исходников)
+
+```bash
+git clone https://github.com/erruqie/remnawave_mcp.git
+cd remnawave_mcp
+npm install
+npm run build
+```
+
+После изменений в TypeScript запустите `npm run build` и закоммитьте обновлённый `dist/index.js`, чтобы `npx git+https://...` продолжал работать.
+
 ### Доступные инструменты
 
-#### Пользователи (27 инструментов)
+#### Пользователи (28 инструментов)
 
 | Инструмент | Описание | Режим |
 |------------|----------|-------|
 | `users_list` | Список пользователей с пагинацией | read |
+| `users_stream` | Список пользователей с cursor-пагинацией | read |
 | `users_get` | Получить пользователя по UUID | read |
 | `users_get_by_username` | Получить пользователя по username | read |
 | `users_get_by_short_uuid` | Получить пользователя по short UUID | read |
@@ -892,7 +992,7 @@ src/
 ├── tools/
 │   ├── helpers.ts                 # Хелперы форматирования
 │   ├── index.ts                   # Регистрация инструментов
-│   ├── users.ts                   # Управление пользователями (27)
+│   ├── users.ts                   # Управление пользователями (28)
 │   ├── nodes.ts                   # Управление нодами (15)
 │   ├── hosts.ts                   # Управление хостами (11)
 │   ├── system.ts                  # Система и авторизация (10)

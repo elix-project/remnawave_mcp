@@ -4,12 +4,13 @@ on:
   push:
     branches:
       - main
+  pull_request:
 
 permissions:
   contents: write
 
 jobs:
-  build-and-release:
+  verify:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -18,7 +19,44 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Verify committed dist is up to date
+        run: |
+          if ! git diff --exit-code -- dist; then
+            echo "dist/ is out of date. Run npm run build and commit dist/index.js."
+            exit 1
+          fi
+
+      - name: Smoke test CLI without env
+        run: |
+          set +e
+          output="$(node dist/index.js 2>&1)"
+          status=$?
+          set -e
+          echo "$output"
+          test "$status" -eq 1
+          echo "$output" | grep -q 'REMNAWAVE_BASE_URL'
+
+  build-and-release:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies

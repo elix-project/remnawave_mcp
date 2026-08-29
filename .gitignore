@@ -1,5 +1,8 @@
 node_modules/
-dist/
+
+# Commit the compiled CLI so `npx git+https://...` can run without a local build.
+# Keep sourcemaps local only.
+dist/*.map
 
 .env
 .env.local
