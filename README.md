@@ -20,7 +20,7 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 - **Readonly mode** — restrict to 70 read-only tools for safe monitoring
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
-- **stdio transport** — works with Claude Desktop, Cursor, Windsurf, and any MCP-compatible client
+- **stdio transport** — works with Cursor, Codex, OpenCode, Claude Desktop, Windsurf, and any MCP-compatible client
 
 ### Requirements
 
@@ -29,7 +29,13 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 
 ### Installation
 
-No clone, no build, no local path. Point your MCP client at `npx`:
+No clone, no build, no local path. Use `npx` in your MCP client.
+
+Optional env vars besides the two required ones: `REMNAWAVE_API_KEY` (Caddy), `REMNAWAVE_READONLY` (`true` for read-only).
+
+#### Cursor
+
+Project: `.cursor/mcp.json`. Global: `~/.cursor/mcp.json`. Or **Cursor Settings → MCP**.
 
 ```json
 {
@@ -46,14 +52,61 @@ No clone, no build, no local path. Point your MCP client at `npx`:
 }
 ```
 
-Optional env vars: `REMNAWAVE_API_KEY` (Caddy), `REMNAWAVE_READONLY` (`true` for read-only).
+#### Codex
+
+CLI / IDE / ChatGPT desktop share `~/.codex/config.toml` (or project `.codex/config.toml`):
+
+```toml
+[mcp_servers.remnawave]
+command = "npx"
+args = ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"]
+
+[mcp_servers.remnawave.env]
+REMNAWAVE_BASE_URL = "https://vpn.example.com"
+REMNAWAVE_API_TOKEN = "your-api-token-here"
+```
+
+Or:
+
+```bash
+codex mcp add remnawave -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
+```
+
+Then add the `env` table in `config.toml`. Check with `codex mcp list`.
+
+#### OpenCode
+
+Project: `opencode.json` / `opencode.jsonc`. Global: `~/.config/opencode/opencode.json`.
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "remnawave": {
+      "type": "local",
+      "command": ["npx", "-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "environment": {
+        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
+        "REMNAWAVE_API_TOKEN": "your-api-token-here"
+      },
+      "enabled": true,
+      "timeout": 60000
+    }
+  }
+}
+```
+
+`timeout` is in ms. First `npx git+https` fetch can be slow, so 60s is safer than the 5s default.
+
+#### Other clients
 
 | Client | Config file |
 |--------|-------------|
-| Cursor | `.cursor/mcp.json` in the project, or Cursor Settings → MCP |
 | Windsurf | `.windsurf/mcp.json` |
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
 | VS Code Copilot | `.vscode/mcp.json` |
+
+Same JSON shape as Cursor (`mcpServers` + `command` / `args` / `env`).
 
 Claude Code:
 
@@ -476,7 +529,7 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 - **Readonly-режим** — ограничение до 70 инструментов только для чтения
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
-- **stdio транспорт** — работает с Claude Desktop, Cursor, Windsurf и любым MCP-совместимым клиентом
+- **stdio транспорт** — работает с Cursor, Codex, OpenCode, Claude Desktop, Windsurf и любым MCP-совместимым клиентом
 
 ### Требования
 
@@ -485,7 +538,13 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 
 ### Установка
 
-Клонировать репозиторий и собирать ничего не нужно. В MCP-клиенте достаточно `npx`:
+Клонировать репозиторий и собирать ничего не нужно. В MCP-клиенте достаточно `npx`.
+
+Необязательные переменные кроме двух обязательных: `REMNAWAVE_API_KEY` (Caddy), `REMNAWAVE_READONLY` (`true` для режима только чтения).
+
+#### Cursor
+
+Проект: `.cursor/mcp.json`. Глобально: `~/.cursor/mcp.json`. Или **Settings → MCP**.
 
 ```json
 {
@@ -502,14 +561,61 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 }
 ```
 
-Необязательные переменные: `REMNAWAVE_API_KEY` (Caddy), `REMNAWAVE_READONLY` (`true` для режима только чтения).
+#### Codex
+
+CLI / IDE / ChatGPT desktop читают `~/.codex/config.toml` (или проектный `.codex/config.toml`):
+
+```toml
+[mcp_servers.remnawave]
+command = "npx"
+args = ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"]
+
+[mcp_servers.remnawave.env]
+REMNAWAVE_BASE_URL = "https://vpn.example.com"
+REMNAWAVE_API_TOKEN = "ваш-api-токен"
+```
+
+Или:
+
+```bash
+codex mcp add remnawave -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
+```
+
+Потом допишите таблицу `env` в `config.toml`. Проверка: `codex mcp list`.
+
+#### OpenCode
+
+Проект: `opencode.json` / `opencode.jsonc`. Глобально: `~/.config/opencode/opencode.json`.
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "remnawave": {
+      "type": "local",
+      "command": ["npx", "-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "environment": {
+        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
+        "REMNAWAVE_API_TOKEN": "ваш-api-токен"
+      },
+      "enabled": true,
+      "timeout": 60000
+    }
+  }
+}
+```
+
+`timeout` в миллисекундах. Первый `npx git+https` может быть долгим, 60 с надёжнее дефолтных 5 с.
+
+#### Другие клиенты
 
 | Клиент | Файл конфигурации |
 |--------|-------------------|
-| Cursor | `.cursor/mcp.json` в проекте или Settings → MCP |
 | Windsurf | `.windsurf/mcp.json` |
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
 | VS Code Copilot | `.vscode/mcp.json` |
+
+Тот же JSON, что у Cursor (`mcpServers` + `command` / `args` / `env`).
 
 Claude Code:
 
