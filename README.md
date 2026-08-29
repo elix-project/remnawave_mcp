@@ -10,7 +10,7 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 1.2.0 | **Remnawave API:** 2.7.4
+**Version:** 1.3.0 | **Remnawave API:** 2.7.4
 
 ### Features
 
@@ -29,16 +29,44 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 
 ### Installation
 
+No clone, no build, no local path. Point your MCP client at `npx`:
+
+```json
+{
+  "mcpServers": {
+    "remnawave": {
+      "command": "npx",
+      "args": ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "env": {
+        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
+        "REMNAWAVE_API_TOKEN": "your-api-token-here"
+      }
+    }
+  }
+}
+```
+
+Optional env vars: `REMNAWAVE_API_KEY` (Caddy), `REMNAWAVE_READONLY` (`true` for read-only).
+
+| Client | Config file |
+|--------|-------------|
+| Cursor | `.cursor/mcp.json` in the project, or Cursor Settings → MCP |
+| Windsurf | `.windsurf/mcp.json` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
+| VS Code Copilot | `.vscode/mcp.json` |
+
+Claude Code:
+
 ```bash
-git clone https://github.com/TrackLine/mcp-remnawave.git
-cd mcp-remnawave
-npm install
-npm run build
+claude mcp add remnawave \
+  -e REMNAWAVE_BASE_URL=https://vpn.example.com \
+  -e REMNAWAVE_API_TOKEN=your-api-token-here \
+  -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
 ```
 
 ### Configuration
 
-Create a `.env` file or pass environment variables:
+Same variables can be put in a `.env` file for Docker or local development:
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -92,56 +120,24 @@ In readonly mode, the available tools are reduced from 153 to 69:
 | IP Control (4) | `ip_control_fetch_ips`, `ip_control_get_fetch_ips_result`, `ip_control_fetch_users_ips`, `ip_control_get_fetch_users_ips_result` |
 | Metadata (2) | `metadata_node_get`, `metadata_user_get` |
 
-### Usage with Claude Desktop
-
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
-
-```json
-{
-  "mcpServers": {
-    "remnawave": {
-      "command": "node",
-      "args": ["/absolute/path/to/remnawave-mcp/dist/index.js"],
-      "env": {
-        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
-        "REMNAWAVE_API_TOKEN": "your-api-token-here",
-        "REMNAWAVE_API_KEY": "your-caddy-api-key",
-        "REMNAWAVE_READONLY": "false"
-      }
-    }
-  }
-}
-```
-
-### Usage with Cursor / Windsurf
-
-Add to `.cursor/mcp.json` or `.windsurf/mcp.json` in your project:
-
-```json
-{
-  "mcpServers": {
-    "remnawave": {
-      "command": "node",
-      "args": ["/absolute/path/to/remnawave-mcp/dist/index.js"],
-      "env": {
-        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
-        "REMNAWAVE_API_TOKEN": "your-api-token-here",
-        "REMNAWAVE_API_KEY": "your-caddy-api-key",
-        "REMNAWAVE_READONLY": "false"
-      }
-    }
-  }
-}
-```
-
 ### Docker
 
 ```bash
-npm run build
 docker compose up -d
 ```
 
 Environment variables are passed via `.env` file or `docker-compose.yml`.
+
+### Development (from source)
+
+```bash
+git clone https://github.com/erruqie/remnawave_mcp.git
+cd remnawave_mcp
+npm install
+npm run build
+```
+
+After changing TypeScript sources, run `npm run build` and commit the updated `dist/index.js` so `npx git+https://...` keeps working.
 
 ### Available Tools
 
@@ -469,7 +465,7 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 1.2.0 | **Remnawave API:** 2.7.4
+**Версия:** 1.3.0 | **Remnawave API:** 2.7.4
 
 ### Возможности
 
@@ -488,16 +484,44 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 
 ### Установка
 
+Клонировать репозиторий и собирать ничего не нужно. В MCP-клиенте достаточно `npx`:
+
+```json
+{
+  "mcpServers": {
+    "remnawave": {
+      "command": "npx",
+      "args": ["-y", "git+https://github.com/erruqie/remnawave_mcp.git"],
+      "env": {
+        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
+        "REMNAWAVE_API_TOKEN": "ваш-api-токен"
+      }
+    }
+  }
+}
+```
+
+Необязательные переменные: `REMNAWAVE_API_KEY` (Caddy), `REMNAWAVE_READONLY` (`true` для режима только чтения).
+
+| Клиент | Файл конфигурации |
+|--------|-------------------|
+| Cursor | `.cursor/mcp.json` в проекте или Settings → MCP |
+| Windsurf | `.windsurf/mcp.json` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) |
+| VS Code Copilot | `.vscode/mcp.json` |
+
+Claude Code:
+
 ```bash
-git clone https://github.com/TrackLine/mcp-remnawave.git
-cd mcp-remnawave
-npm install
-npm run build
+claude mcp add remnawave \
+  -e REMNAWAVE_BASE_URL=https://vpn.example.com \
+  -e REMNAWAVE_API_TOKEN=ваш-api-токен \
+  -- npx -y git+https://github.com/erruqie/remnawave_mcp.git
 ```
 
 ### Конфигурация
 
-Создайте файл `.env` или передайте переменные окружения:
+Те же переменные можно положить в `.env` для Docker или локальной разработки:
 
 | Переменная | Обязательная | Описание |
 |------------|-------------|----------|
@@ -551,56 +575,24 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 | IP-контроль (4) | `ip_control_fetch_ips`, `ip_control_get_fetch_ips_result`, `ip_control_fetch_users_ips`, `ip_control_get_fetch_users_ips_result` |
 | Метаданные (2) | `metadata_node_get`, `metadata_user_get` |
 
-### Использование с Claude Desktop
-
-Добавьте в конфигурацию Claude Desktop (`~/Library/Application Support/Claude/claude_desktop_config.json` на macOS):
-
-```json
-{
-  "mcpServers": {
-    "remnawave": {
-      "command": "node",
-      "args": ["/абсолютный/путь/к/remnawave-mcp/dist/index.js"],
-      "env": {
-        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
-        "REMNAWAVE_API_TOKEN": "ваш-api-токен",
-        "REMNAWAVE_API_KEY": "ваш-caddy-api-ключ",
-        "REMNAWAVE_READONLY": "false"
-      }
-    }
-  }
-}
-```
-
-### Использование с Cursor / Windsurf
-
-Добавьте в `.cursor/mcp.json` или `.windsurf/mcp.json` вашего проекта:
-
-```json
-{
-  "mcpServers": {
-    "remnawave": {
-      "command": "node",
-      "args": ["/абсолютный/путь/к/remnawave-mcp/dist/index.js"],
-      "env": {
-        "REMNAWAVE_BASE_URL": "https://vpn.example.com",
-        "REMNAWAVE_API_TOKEN": "ваш-api-токен",
-        "REMNAWAVE_API_KEY": "ваш-caddy-api-ключ",
-        "REMNAWAVE_READONLY": "false"
-      }
-    }
-  }
-}
-```
-
 ### Docker
 
 ```bash
-npm run build
 docker compose up -d
 ```
 
 Переменные окружения передаются через `.env` файл или `docker-compose.yml`.
+
+### Разработка (из исходников)
+
+```bash
+git clone https://github.com/erruqie/remnawave_mcp.git
+cd remnawave_mcp
+npm install
+npm run build
+```
+
+После изменений в TypeScript запустите `npm run build` и закоммитьте обновлённый `dist/index.js`, чтобы `npx git+https://...` продолжал работать.
 
 ### Доступные инструменты
 
