@@ -126,6 +126,33 @@ export function registerAllPrompts(server: McpServer) {
     );
 
     server.prompt(
+        'edit_config_profile',
+        'Step-by-step guide to edit a config profile core config',
+        {
+            uuid: z.string().describe('UUID of the config profile to edit'),
+        },
+        async ({ uuid }) => ({
+            messages: [
+                {
+                    role: 'user' as const,
+                    content: {
+                        type: 'text' as const,
+                        text: `I want to edit the Xray/sing-box core config of config profile ${uuid}. Follow this workflow:
+
+1. Fetch the current profile with config_profiles_get (uuid). The response includes the full \`config\` object.
+2. Optionally fetch config_profiles_get_computed_config if I need the resolved/snippet-expanded view.
+3. Apply my requested changes to that \`config\` object (inbounds, outbounds, routing, dns, etc.).
+4. Call config_profiles_update with the same uuid and the **full** modified \`config\` object. The API replaces the entire core config; do not send a partial patch. You may also pass \`name\` to rename the profile.
+5. Show me what changed and confirm the update succeeded.
+
+config_profiles_update accepts uuid (required), optional name, and optional config (the full core configuration object).`,
+                    },
+                },
+            ],
+        }),
+    );
+
+    server.prompt(
         'bulk_user_cleanup',
         'Find and manage expired or inactive users',
         {},

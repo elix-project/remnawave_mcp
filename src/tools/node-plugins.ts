@@ -30,9 +30,10 @@ export function registerNodePluginTools(server: McpServer, client: RemnawaveClie
         try { return toolResult(await client.createNodePlugin(params)); } catch (e) { return toolError(e); }
     });
 
-    server.tool('node_plugins_update', 'Update a node plugin', {
+    server.tool('node_plugins_update', 'Update a node plugin name and/or pluginConfig. Get the current object with node_plugins_get, then pass the full `pluginConfig` to replace it.', {
         uuid: z.string().describe('Plugin UUID'),
         name: z.string().optional().describe('New name'),
+        pluginConfig: z.record(z.unknown()).optional().describe('Plugin configuration object. Replaces the entire pluginConfig. Omit to leave the existing config unchanged.'),
     }, async (params) => {
         try { return toolResult(await client.updateNodePlugin(params)); } catch (e) { return toolError(e); }
     });

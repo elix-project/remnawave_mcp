@@ -40272,10 +40272,12 @@ function registerInboundTools(server, client, readonly2) {
   if (readonly2) return;
   server.tool(
     "config_profiles_create",
-    "Create a new config profile",
+    "Create a new config profile with an Xray/sing-box core config",
     {
       name: external_exports.string().describe("Profile name"),
-      config: external_exports.record(external_exports.unknown()).describe("Config profile configuration object")
+      config: external_exports.record(external_exports.unknown()).describe(
+        "Full Xray/sing-box core configuration object (inbounds, outbounds, routing, etc.)"
+      )
     },
     async (params) => {
       try {
@@ -40288,10 +40290,13 @@ function registerInboundTools(server, client, readonly2) {
   );
   server.tool(
     "config_profiles_update",
-    "Update a config profile",
+    "Update a config profile: rename it and/or replace its Xray/sing-box core config. Get the current object with config_profiles_get, edit it, then pass the full `config` here (this replaces the entire core config, not a partial patch).",
     {
       uuid: external_exports.string().describe("Profile UUID"),
-      name: external_exports.string().optional().describe("New name")
+      name: external_exports.string().optional().describe("New profile name"),
+      config: external_exports.record(external_exports.unknown()).optional().describe(
+        "Full Xray/sing-box core configuration object. Same shape as config_profiles_create.config and the `config` field returned by config_profiles_get. Replaces the entire core config. Omit to leave the existing config unchanged."
+      )
     },
     async (params) => {
       try {
@@ -40386,10 +40391,11 @@ function registerSquadTools(server, client, readonly2) {
   );
   server.tool(
     "squads_update",
-    "Update an internal squad",
+    "Update an internal squad name and/or inbound list",
     {
       uuid: external_exports.string().describe("Squad UUID"),
-      name: external_exports.string().optional().describe("New squad name")
+      name: external_exports.string().optional().describe("New squad name"),
+      inbounds: external_exports.array(external_exports.string()).optional().describe("Array of inbound UUIDs. Replaces the squad inbound list. Omit to leave inbounds unchanged.")
     },
     async (params) => {
       try {
@@ -40902,9 +40908,10 @@ function registerSubPageConfigTools(server, client, readonly2) {
       return toolError(e);
     }
   });
-  server.tool("sub_page_configs_update", "Update a subscription page configuration", {
+  server.tool("sub_page_configs_update", "Update a subscription page configuration name and/or its config payload. Get the current object with sub_page_configs_get, then pass the full `config` to replace it.", {
     uuid: external_exports.string().describe("Config UUID"),
-    name: external_exports.string().optional().describe("New name")
+    name: external_exports.string().optional().describe("New name"),
+    config: external_exports.record(external_exports.unknown()).optional().describe("Subscription page configuration object. Replaces the entire config payload. Omit to leave the existing config unchanged.")
   }, async (params) => {
     try {
       return toolResult(await client.updateSubscriptionPageConfig(params));
@@ -40987,9 +40994,10 @@ function registerNodePluginTools(server, client, readonly2) {
       return toolError(e);
     }
   });
-  server.tool("node_plugins_update", "Update a node plugin", {
+  server.tool("node_plugins_update", "Update a node plugin name and/or pluginConfig. Get the current object with node_plugins_get, then pass the full `pluginConfig` to replace it.", {
     uuid: external_exports.string().describe("Plugin UUID"),
-    name: external_exports.string().optional().describe("New name")
+    name: external_exports.string().optional().describe("New name"),
+    pluginConfig: external_exports.record(external_exports.unknown()).optional().describe("Plugin configuration object. Replaces the entire pluginConfig. Omit to leave the existing config unchanged.")
   }, async (params) => {
     try {
       return toolResult(await client.updateNodePlugin(params));
@@ -41404,6 +41412,32 @@ function registerAllPrompts(server) {
     })
   );
   server.prompt(
+    "edit_config_profile",
+    "Step-by-step guide to edit a config profile core config",
+    {
+      uuid: external_exports.string().describe("UUID of the config profile to edit")
+    },
+    async ({ uuid: uuid2 }) => ({
+      messages: [
+        {
+          role: "user",
+          content: {
+            type: "text",
+            text: `I want to edit the Xray/sing-box core config of config profile ${uuid2}. Follow this workflow:
+
+1. Fetch the current profile with config_profiles_get (uuid). The response includes the full \`config\` object.
+2. Optionally fetch config_profiles_get_computed_config if I need the resolved/snippet-expanded view.
+3. Apply my requested changes to that \`config\` object (inbounds, outbounds, routing, dns, etc.).
+4. Call config_profiles_update with the same uuid and the **full** modified \`config\` object. The API replaces the entire core config; do not send a partial patch. You may also pass \`name\` to rename the profile.
+5. Show me what changed and confirm the update succeeded.
+
+config_profiles_update accepts uuid (required), optional name, and optional config (the full core configuration object).`
+          }
+        }
+      ]
+    })
+  );
+  server.prompt(
     "bulk_user_cleanup",
     "Find and manage expired or inactive users",
     {},
@@ -41435,7 +41469,7 @@ function registerAllPrompts(server) {
 function createServer(config2) {
   const server = new McpServer({
     name: "remnawave-mcp",
-    version: "1.4.0"
+    version: "1.4.1"
   });
   const client = new RemnawaveClient(config2);
   registerAllTools(server, client, config2.readonly);
