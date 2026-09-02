@@ -38373,6 +38373,12 @@ var RemnawaveClient = class {
   async getUserBySubscriptionUuid(subscriptionUuid) {
     return this.get(import_backend_contract.REST_API.USERS.GET_BY.SUBSCRIPTION_UUID(subscriptionUuid));
   }
+  async getUserAccessibleNodes(uuid2) {
+    return this.get(import_backend_contract.REST_API.USERS.ACCESSIBLE_NODES(uuid2));
+  }
+  async getUserSubscriptionRequestHistory(uuid2) {
+    return this.get(import_backend_contract.REST_API.USERS.SUBSCRIPTION_REQUEST_HISTORY(uuid2));
+  }
   async getUserTags() {
     return this.get(import_backend_contract.REST_API.USERS.TAGS.GET);
   }
@@ -38495,6 +38501,9 @@ var RemnawaveClient = class {
   async deleteHost(uuid2) {
     return this.delete(import_backend_contract.REST_API.HOSTS.DELETE(uuid2));
   }
+  async reorderHosts(hosts) {
+    return this.post(import_backend_contract.REST_API.HOSTS.ACTIONS.REORDER, { hosts });
+  }
   async bulkEnableHosts(params) {
     return this.post(import_backend_contract.REST_API.HOSTS.BULK.ENABLE_HOSTS, params);
   }
@@ -38504,11 +38513,8 @@ var RemnawaveClient = class {
   async bulkDeleteHosts(params) {
     return this.post(import_backend_contract.REST_API.HOSTS.BULK.DELETE_HOSTS, params);
   }
-  async bulkSetHostInbound(params) {
-    return this.post(import_backend_contract.REST_API.HOSTS.BULK.SET_INBOUND, params);
-  }
-  async bulkSetHostPort(params) {
-    return this.post(import_backend_contract.REST_API.HOSTS.BULK.SET_PORT, params);
+  async bulkUpdateHosts(params) {
+    return this.post(import_backend_contract.REST_API.HOSTS.BULK.UPDATE, params);
   }
   // System
   async getStats() {
@@ -38603,6 +38609,9 @@ var RemnawaveClient = class {
   async getInternalSquads() {
     return this.get(import_backend_contract.REST_API.INTERNAL_SQUADS.GET);
   }
+  async getInternalSquadByUuid(uuid2) {
+    return this.get(import_backend_contract.REST_API.INTERNAL_SQUADS.GET_BY_UUID(uuid2));
+  }
   async getSquadAccessibleNodes(uuid2) {
     return this.get(import_backend_contract.REST_API.INTERNAL_SQUADS.ACCESSIBLE_NODES(uuid2));
   }
@@ -38626,6 +38635,9 @@ var RemnawaveClient = class {
       import_backend_contract.REST_API.INTERNAL_SQUADS.BULK_ACTIONS.REMOVE_USERS(squadUuid),
       { userUuids }
     );
+  }
+  async reorderInternalSquads(params) {
+    return this.post(import_backend_contract.REST_API.INTERNAL_SQUADS.ACTIONS.REORDER, params);
   }
   // HWID
   async getUserHwidDevices(userUuid) {
@@ -38655,14 +38667,55 @@ var RemnawaveClient = class {
     });
   }
   // Bandwidth Stats
-  async getNodesBandwidth() {
-    return this.get(import_backend_contract.REST_API.BANDWIDTH_STATS.NODES.GET);
+  async getNodesBandwidth(query) {
+    const params = new URLSearchParams({
+      start: query.start,
+      end: query.end
+    });
+    if (query.topNodesLimit !== void 0) {
+      params.set("topNodesLimit", String(query.topNodesLimit));
+    }
+    return this.get(
+      `${import_backend_contract.REST_API.BANDWIDTH_STATS.NODES.GET}?${params.toString()}`
+    );
   }
   async getNodesRealtimeBandwidth() {
     return this.get(import_backend_contract.REST_API.BANDWIDTH_STATS.NODES.GET_REALTIME);
   }
-  async getUserBandwidthByUuid(uuid2) {
-    return this.get(import_backend_contract.REST_API.BANDWIDTH_STATS.USERS.GET_BY_UUID(uuid2));
+  async getNodeUsersBandwidth(uuid2, query) {
+    const params = new URLSearchParams({
+      start: query.start,
+      end: query.end
+    });
+    if (query.topUsersLimit !== void 0) {
+      params.set("topUsersLimit", String(query.topUsersLimit));
+    }
+    return this.get(
+      `${import_backend_contract.REST_API.BANDWIDTH_STATS.NODES.GET_USERS(uuid2)}?${params.toString()}`
+    );
+  }
+  async getNodesUsersBandwidth(params) {
+    const { nodesUuids, start, end, topUsersLimit } = params;
+    const query = new URLSearchParams({ start, end });
+    if (topUsersLimit !== void 0) {
+      query.set("topUsersLimit", String(topUsersLimit));
+    }
+    return this.post(
+      `${import_backend_contract.REST_API.BANDWIDTH_STATS.NODES.GET_USERS_BY_NODES}?${query.toString()}`,
+      { nodesUuids }
+    );
+  }
+  async getUserBandwidthByUuid(uuid2, query) {
+    const params = new URLSearchParams({
+      start: query.start,
+      end: query.end
+    });
+    if (query.topNodesLimit !== void 0) {
+      params.set("topNodesLimit", String(query.topNodesLimit));
+    }
+    return this.get(
+      `${import_backend_contract.REST_API.BANDWIDTH_STATS.USERS.GET_BY_UUID(uuid2)}?${params.toString()}`
+    );
   }
   // Auth
   async getAuthStatus() {
@@ -38672,11 +38725,40 @@ var RemnawaveClient = class {
   async getApiTokens() {
     return this.get(import_backend_contract.REST_API.API_TOKENS.GET);
   }
+  async getApiTokenScopes() {
+    return this.get(import_backend_contract.REST_API.API_TOKENS.GET_SCOPES);
+  }
   async createApiToken(params) {
     return this.post(import_backend_contract.REST_API.API_TOKENS.CREATE, params);
   }
   async deleteApiToken(uuid2) {
     return this.delete(import_backend_contract.REST_API.API_TOKENS.DELETE(uuid2));
+  }
+  // Subscription Templates
+  async getSubscriptionTemplates() {
+    return this.get(import_backend_contract.REST_API.SUBSCRIPTION_TEMPLATE.GET_ALL);
+  }
+  async getSubscriptionTemplateByUuid(uuid2) {
+    return this.get(import_backend_contract.REST_API.SUBSCRIPTION_TEMPLATE.GET(uuid2));
+  }
+  async createSubscriptionTemplate(params) {
+    return this.post(import_backend_contract.REST_API.SUBSCRIPTION_TEMPLATE.CREATE, params);
+  }
+  async updateSubscriptionTemplate(params) {
+    return this.patch(import_backend_contract.REST_API.SUBSCRIPTION_TEMPLATE.UPDATE, params);
+  }
+  async deleteSubscriptionTemplate(uuid2) {
+    return this.delete(import_backend_contract.REST_API.SUBSCRIPTION_TEMPLATE.DELETE(uuid2));
+  }
+  async reorderSubscriptionTemplates(params) {
+    return this.post(import_backend_contract.REST_API.SUBSCRIPTION_TEMPLATE.ACTIONS.REORDER, params);
+  }
+  // Subscription Settings
+  async getSubscriptionSettings() {
+    return this.get(import_backend_contract.REST_API.SUBSCRIPTION_SETTINGS.GET);
+  }
+  async updateSubscriptionSettings(params) {
+    return this.patch(import_backend_contract.REST_API.SUBSCRIPTION_SETTINGS.UPDATE, params);
   }
   // Keygen
   async getKeygen() {
@@ -39014,6 +39096,51 @@ function registerUserTools(server, client, readonly2) {
     async ({ subscriptionUuid }) => {
       try {
         const result = await client.getUserBySubscriptionUuid(subscriptionUuid);
+        return toolResult(result);
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "users_get_by_id",
+    "Get a Remnawave user by numeric ID",
+    {
+      id: external_exports.string().describe("User numeric ID as string")
+    },
+    async ({ id }) => {
+      try {
+        const result = await client.getUserById(id);
+        return toolResult(result);
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "users_accessible_nodes",
+    "Get nodes accessible to a specific user",
+    {
+      uuid: external_exports.string().describe("User UUID")
+    },
+    async ({ uuid: uuid2 }) => {
+      try {
+        const result = await client.getUserAccessibleNodes(uuid2);
+        return toolResult(result);
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "users_subscription_request_history",
+    "Get subscription request history for a specific user",
+    {
+      uuid: external_exports.string().describe("User UUID")
+    },
+    async ({ uuid: uuid2 }) => {
+      try {
+        const result = await client.getUserSubscriptionRequestHistory(uuid2);
         return toolResult(result);
       } catch (e) {
         return toolError(e);
@@ -39852,6 +39979,25 @@ function registerHostTools(server, client, readonly2) {
     }
   );
   server.tool(
+    "hosts_reorder",
+    "Reorder hosts",
+    {
+      hosts: external_exports.array(
+        external_exports.object({
+          viewPosition: external_exports.number().describe("Sort position (0-based)"),
+          uuid: external_exports.string().describe("Host UUID")
+        })
+      ).describe("Ordered array of { viewPosition, uuid } objects")
+    },
+    async ({ hosts }) => {
+      try {
+        return toolResult(await client.reorderHosts(hosts));
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
     "hosts_bulk_enable",
     "Bulk enable selected hosts",
     { uuids: external_exports.array(external_exports.string()).describe("Array of host UUIDs") },
@@ -39888,31 +40034,31 @@ function registerHostTools(server, client, readonly2) {
     }
   );
   server.tool(
-    "hosts_bulk_set_inbound",
-    "Bulk set inbound for selected hosts",
+    "hosts_bulk_update",
+    "Bulk update selected hosts (port, inbound, tags, address, and other host fields)",
     {
       uuids: external_exports.array(external_exports.string()).describe("Array of host UUIDs"),
-      configProfileUuid: external_exports.string().describe("Config profile UUID"),
-      configProfileInboundUuid: external_exports.string().describe("Inbound UUID")
+      port: external_exports.number().optional().describe("New port number"),
+      inbound: external_exports.object({
+        configProfileUuid: external_exports.string().describe("Config profile UUID"),
+        configProfileInboundUuid: external_exports.string().describe("Inbound UUID")
+      }).optional().describe("Inbound profile mapping to apply"),
+      remark: external_exports.string().optional().describe("Host remark/name"),
+      address: external_exports.string().optional().describe("Host address"),
+      path: external_exports.string().nullable().optional().describe("Path"),
+      sni: external_exports.string().nullable().optional().describe("SNI"),
+      host: external_exports.string().nullable().optional().describe("Host header"),
+      tags: external_exports.array(external_exports.string()).optional().describe("Host tags"),
+      nodes: external_exports.array(external_exports.string()).optional().describe("Node UUIDs"),
+      isDisabled: external_exports.boolean().optional().describe("Disable host"),
+      isHidden: external_exports.boolean().optional().describe("Hide host"),
+      securityLayer: external_exports.enum(["DEFAULT", "TLS", "NONE"]).optional().describe("Security layer"),
+      excludeFromSubscriptionTypes: external_exports.array(external_exports.enum(SUBSCRIPTION_TYPES)).optional().describe("Subscription types to exclude from"),
+      excludedInternalSquads: external_exports.array(external_exports.string()).optional().describe("Internal squad UUIDs to exclude")
     },
     async (params) => {
       try {
-        return toolResult(await client.bulkSetHostInbound(params));
-      } catch (e) {
-        return toolError(e);
-      }
-    }
-  );
-  server.tool(
-    "hosts_bulk_set_port",
-    "Bulk set port for selected hosts",
-    {
-      uuids: external_exports.array(external_exports.string()).describe("Array of host UUIDs"),
-      port: external_exports.number().describe("New port number")
-    },
-    async (params) => {
-      try {
-        return toolResult(await client.bulkSetHostPort(params));
+        return toolResult(await client.bulkUpdateHosts(params));
       } catch (e) {
         return toolError(e);
       }
@@ -40358,6 +40504,21 @@ function registerSquadTools(server, client, readonly2) {
     }
   );
   server.tool(
+    "squads_get",
+    "Get an internal squad by UUID",
+    {
+      uuid: external_exports.string().describe("Squad UUID")
+    },
+    async ({ uuid: uuid2 }) => {
+      try {
+        const result = await client.getInternalSquadByUuid(uuid2);
+        return toolResult(result);
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
     "squads_accessible_nodes",
     "Get nodes accessible to a specific squad",
     {
@@ -40456,6 +40617,26 @@ function registerSquadTools(server, client, readonly2) {
           squadUuid,
           userUuids
         );
+        return toolResult(result);
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "squads_reorder",
+    "Reorder internal squads",
+    {
+      items: external_exports.array(
+        external_exports.object({
+          viewPosition: external_exports.number().describe("Sort position (0-based)"),
+          uuid: external_exports.string().describe("Squad UUID")
+        })
+      ).describe("Ordered array of { viewPosition, uuid } objects")
+    },
+    async (params) => {
+      try {
+        const result = await client.reorderInternalSquads(params);
         return toolResult(result);
       } catch (e) {
         return toolError(e);
@@ -40579,6 +40760,13 @@ function registerApiTokenTools(server, client, readonly2) {
   server.tool("api_tokens_list", "List all API tokens", {}, async () => {
     try {
       return toolResult(await client.getApiTokens());
+    } catch (e) {
+      return toolError(e);
+    }
+  });
+  server.tool("api_tokens_scopes", "List available API token scopes", {}, async () => {
+    try {
+      return toolResult(await client.getApiTokenScopes());
     } catch (e) {
       return toolError(e);
     }
@@ -41189,6 +41377,253 @@ function registerMetadataTools(server, client, readonly2) {
   });
 }
 
+// src/tools/subscription-templates.ts
+var TEMPLATE_TYPES = [
+  "XRAY_JSON",
+  "XRAY_BASE64",
+  "MIHOMO",
+  "STASH",
+  "CLASH",
+  "SINGBOX"
+];
+function registerSubscriptionTemplateTools(server, client, readonly2) {
+  server.tool(
+    "subscription_templates_list",
+    "List all subscription templates",
+    {},
+    async () => {
+      try {
+        return toolResult(await client.getSubscriptionTemplates());
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "subscription_templates_get",
+    "Get a subscription template by UUID",
+    {
+      uuid: external_exports.string().describe("Template UUID")
+    },
+    async ({ uuid: uuid2 }) => {
+      try {
+        return toolResult(await client.getSubscriptionTemplateByUuid(uuid2));
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  if (readonly2) return;
+  server.tool(
+    "subscription_templates_create",
+    "Create a subscription template",
+    {
+      name: external_exports.string().describe("Template name"),
+      templateType: external_exports.enum(TEMPLATE_TYPES).describe("Template type")
+    },
+    async (params) => {
+      try {
+        return toolResult(await client.createSubscriptionTemplate(params));
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "subscription_templates_update",
+    "Update a subscription template name and/or content. Get the current object with subscription_templates_get first.",
+    {
+      uuid: external_exports.string().describe("Template UUID"),
+      name: external_exports.string().optional().describe("New template name"),
+      templateJson: external_exports.record(external_exports.unknown()).optional().describe("JSON template body (for XRAY_JSON)"),
+      encodedTemplateYaml: external_exports.string().optional().describe("Base64-encoded YAML template body")
+    },
+    async (params) => {
+      try {
+        return toolResult(await client.updateSubscriptionTemplate(params));
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "subscription_templates_delete",
+    "Delete a subscription template",
+    {
+      uuid: external_exports.string().describe("Template UUID to delete")
+    },
+    async ({ uuid: uuid2 }) => {
+      try {
+        await client.deleteSubscriptionTemplate(uuid2);
+        return toolResult({
+          success: true,
+          message: `Subscription template ${uuid2} deleted`
+        });
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "subscription_templates_reorder",
+    "Reorder subscription templates",
+    {
+      items: external_exports.array(
+        external_exports.object({
+          viewPosition: external_exports.number().describe("Sort position (0-based)"),
+          uuid: external_exports.string().describe("Template UUID")
+        })
+      ).describe("Ordered array of { viewPosition, uuid } objects")
+    },
+    async (params) => {
+      try {
+        return toolResult(await client.reorderSubscriptionTemplates(params));
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+}
+
+// src/tools/subscription-settings.ts
+function registerSubscriptionSettingsTools(server, client, readonly2) {
+  server.tool(
+    "subscription_settings_get",
+    "Get subscription settings",
+    {},
+    async () => {
+      try {
+        return toolResult(await client.getSubscriptionSettings());
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  if (readonly2) return;
+  server.tool(
+    "subscription_settings_update",
+    "Update subscription settings. Get the current object with subscription_settings_get first, then pass uuid plus fields to change.",
+    {
+      uuid: external_exports.string().describe("Subscription settings UUID"),
+      profileTitle: external_exports.string().optional().describe("Profile title"),
+      supportLink: external_exports.string().optional().describe("Support link"),
+      profileUpdateInterval: external_exports.number().optional().describe("Profile update interval in hours"),
+      isProfileWebpageUrlEnabled: external_exports.boolean().optional().describe("Enable profile web page URL"),
+      serveJsonAtBaseSubscription: external_exports.boolean().optional().describe("Serve JSON at base subscription URL"),
+      happAnnounce: external_exports.string().nullable().optional().describe("Happ announce message"),
+      happRouting: external_exports.string().nullable().optional().describe("Happ routing config"),
+      isShowCustomRemarks: external_exports.boolean().optional().describe("Show custom remarks"),
+      customRemarks: external_exports.record(external_exports.unknown()).optional().describe("Custom remarks object"),
+      customResponseHeaders: external_exports.record(external_exports.string()).optional().describe("Custom response headers map"),
+      randomizeHosts: external_exports.boolean().optional().describe("Randomize hosts"),
+      responseRules: external_exports.record(external_exports.unknown()).optional().describe("Subscription request routing rules"),
+      hwidSettings: external_exports.record(external_exports.unknown()).optional().describe("HWID settings object")
+    },
+    async (params) => {
+      try {
+        return toolResult(await client.updateSubscriptionSettings(params));
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+}
+
+// src/tools/bandwidth-stats.ts
+function registerBandwidthStatsTools(server, client) {
+  server.tool(
+    "bandwidth_nodes",
+    "Get bandwidth usage stats across nodes for a date range",
+    {
+      start: external_exports.string().describe("Start datetime (ISO 8601)"),
+      end: external_exports.string().describe("End datetime (ISO 8601)"),
+      topNodesLimit: external_exports.number().optional().describe("Max number of top nodes to return")
+    },
+    async (params) => {
+      try {
+        return toolResult(await client.getNodesBandwidth(params));
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "bandwidth_nodes_realtime",
+    "Get realtime bandwidth stats for nodes",
+    {},
+    async () => {
+      try {
+        return toolResult(await client.getNodesRealtimeBandwidth());
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "bandwidth_node_users",
+    "Get bandwidth usage by users on a specific node for a date range",
+    {
+      uuid: external_exports.string().describe("Node UUID"),
+      start: external_exports.string().describe("Start datetime (ISO 8601)"),
+      end: external_exports.string().describe("End datetime (ISO 8601)"),
+      topUsersLimit: external_exports.number().optional().describe("Max number of top users to return")
+    },
+    async ({ uuid: uuid2, start, end, topUsersLimit }) => {
+      try {
+        return toolResult(
+          await client.getNodeUsersBandwidth(uuid2, {
+            start,
+            end,
+            topUsersLimit
+          })
+        );
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "bandwidth_nodes_users",
+    "Get bandwidth usage by users across selected nodes for a date range",
+    {
+      nodesUuids: external_exports.array(external_exports.string()).describe("Array of node UUIDs"),
+      start: external_exports.string().describe("Start datetime (ISO 8601)"),
+      end: external_exports.string().describe("End datetime (ISO 8601)"),
+      topUsersLimit: external_exports.number().optional().describe("Max number of top users to return")
+    },
+    async (params) => {
+      try {
+        return toolResult(await client.getNodesUsersBandwidth(params));
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+  server.tool(
+    "bandwidth_user",
+    "Get bandwidth usage for a specific user for a date range",
+    {
+      uuid: external_exports.string().describe("User UUID"),
+      start: external_exports.string().describe("Start datetime (ISO 8601)"),
+      end: external_exports.string().describe("End datetime (ISO 8601)"),
+      topNodesLimit: external_exports.number().optional().describe("Max number of top nodes to return")
+    },
+    async ({ uuid: uuid2, start, end, topNodesLimit }) => {
+      try {
+        return toolResult(
+          await client.getUserBandwidthByUuid(uuid2, {
+            start,
+            end,
+            topNodesLimit
+          })
+        );
+      } catch (e) {
+        return toolError(e);
+      }
+    }
+  );
+}
+
 // src/tools/index.ts
 function registerAllTools(server, client, readonly2) {
   registerUserTools(server, client, readonly2);
@@ -41209,6 +41644,9 @@ function registerAllTools(server, client, readonly2) {
   registerNodePluginTools(server, client, readonly2);
   registerIpControlTools(server, client, readonly2);
   registerMetadataTools(server, client, readonly2);
+  registerSubscriptionTemplateTools(server, client, readonly2);
+  registerSubscriptionSettingsTools(server, client, readonly2);
+  registerBandwidthStatsTools(server, client);
 }
 
 // src/resources/index.ts

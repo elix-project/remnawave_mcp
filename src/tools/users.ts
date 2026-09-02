@@ -151,6 +151,54 @@ export function registerUserTools(server: McpServer, client: RemnawaveClient, re
     );
 
     server.tool(
+        'users_get_by_id',
+        'Get a Remnawave user by numeric ID',
+        {
+            id: z.string().describe('User numeric ID as string'),
+        },
+        async ({ id }) => {
+            try {
+                const result = await client.getUserById(id);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'users_accessible_nodes',
+        'Get nodes accessible to a specific user',
+        {
+            uuid: z.string().describe('User UUID'),
+        },
+        async ({ uuid }) => {
+            try {
+                const result = await client.getUserAccessibleNodes(uuid);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'users_subscription_request_history',
+        'Get subscription request history for a specific user',
+        {
+            uuid: z.string().describe('User UUID'),
+        },
+        async ({ uuid }) => {
+            try {
+                const result = await client.getUserSubscriptionRequestHistory(uuid);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'users_tags_list',
         'List all user tags',
         {},
