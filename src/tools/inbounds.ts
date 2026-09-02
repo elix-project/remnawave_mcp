@@ -88,10 +88,14 @@ export function registerInboundTools(
 
     server.tool(
         'config_profiles_create',
-        'Create a new config profile',
+        'Create a new config profile with an Xray/sing-box core config',
         {
             name: z.string().describe('Profile name'),
-            config: z.record(z.unknown()).describe('Config profile configuration object'),
+            config: z
+                .record(z.unknown())
+                .describe(
+                    'Full Xray/sing-box core configuration object (inbounds, outbounds, routing, etc.)',
+                ),
         },
         async (params) => {
             try {
@@ -105,10 +109,16 @@ export function registerInboundTools(
 
     server.tool(
         'config_profiles_update',
-        'Update a config profile',
+        'Update a config profile: rename it and/or replace its Xray/sing-box core config. Get the current object with config_profiles_get, edit it, then pass the full `config` here (this replaces the entire core config, not a partial patch).',
         {
             uuid: z.string().describe('Profile UUID'),
-            name: z.string().optional().describe('New name'),
+            name: z.string().optional().describe('New profile name'),
+            config: z
+                .record(z.unknown())
+                .optional()
+                .describe(
+                    'Full Xray/sing-box core configuration object. Same shape as config_profiles_create.config and the `config` field returned by config_profiles_get. Replaces the entire core config. Omit to leave the existing config unchanged.',
+                ),
         },
         async (params) => {
             try {

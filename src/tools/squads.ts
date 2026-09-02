@@ -59,10 +59,14 @@ export function registerSquadTools(
 
     server.tool(
         'squads_update',
-        'Update an internal squad',
+        'Update an internal squad name and/or inbound list',
         {
             uuid: z.string().describe('Squad UUID'),
             name: z.string().optional().describe('New squad name'),
+            inbounds: z
+                .array(z.string())
+                .optional()
+                .describe('Array of inbound UUIDs. Replaces the squad inbound list. Omit to leave inbounds unchanged.'),
         },
         async (params) => {
             try {

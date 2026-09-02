@@ -10,13 +10,13 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 1.4.0 | **Remnawave panel:** 2.8.0–2.8.1 | **Contract:** `@remnawave/backend-contract` 2.8.35
+**Version:** 1.4.1 | **Remnawave panel:** 2.8.0–2.8.1 | **Contract:** `@remnawave/backend-contract` 2.8.35
 
 ### Features
 
 - **154 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, IP control, and metadata
 - **3 resources** — real-time panel stats, node status, health checks
-- **5 prompts** — guided workflows for common tasks
+- **6 prompts** — guided workflows for common tasks
 - **Readonly mode** — restrict to 70 read-only tools for safe monitoring
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
@@ -303,7 +303,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `config_profiles_get_inbounds` | Get inbounds by profile UUID | read |
 | `config_profiles_get_computed_config` | Get computed config by profile UUID | read |
 | `config_profiles_create` | Create config profile | write |
-| `config_profiles_update` | Update config profile | write |
+| `config_profiles_update` | Update config profile name and/or core Xray/sing-box config | write |
 | `config_profiles_delete` | Delete config profile | write |
 | `config_profiles_reorder` | Reorder config profiles | write |
 
@@ -314,7 +314,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `squads_list` | List all squads | read |
 | `squads_accessible_nodes` | Get squad accessible nodes | read |
 | `squads_create` | Create a squad | write |
-| `squads_update` | Update a squad | write |
+| `squads_update` | Update a squad name and/or inbound list | write |
 | `squads_delete` | Delete a squad | write |
 | `squads_add_users` | Add users to a squad | write |
 | `squads_remove_users` | Remove users from a squad | write |
@@ -398,7 +398,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `sub_page_configs_list` | List subscription page configs | read |
 | `sub_page_configs_get` | Get subscription page config | read |
 | `sub_page_configs_create` | Create subscription page config | write |
-| `sub_page_configs_update` | Update subscription page config | write |
+| `sub_page_configs_update` | Update subscription page config name and/or config payload | write |
 | `sub_page_configs_delete` | Delete subscription page config | write |
 | `sub_page_configs_reorder` | Reorder subscription page configs | write |
 | `sub_page_configs_clone` | Clone subscription page config | write |
@@ -412,7 +412,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `node_plugins_torrent_reports` | Get torrent blocker reports | read |
 | `node_plugins_torrent_stats` | Get torrent blocker stats | read |
 | `node_plugins_create` | Create node plugin | write |
-| `node_plugins_update` | Update node plugin | write |
+| `node_plugins_update` | Update node plugin name and/or pluginConfig | write |
 | `node_plugins_delete` | Delete node plugin | write |
 | `node_plugins_reorder` | Reorder node plugins | write |
 | `node_plugins_clone` | Clone node plugin | write |
@@ -455,6 +455,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `node_diagnostics` | Node troubleshooting |
 | `traffic_report` | Traffic usage report |
 | `user_audit` | Complete user audit |
+| `edit_config_profile` | Edit a config profile core config |
 | `bulk_user_cleanup` | Find and manage expired users |
 
 ### Example Queries
@@ -469,6 +470,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 "Show billing history"
 "List all node plugins"
 "Get IP connections for user X"
+"Edit the Xray inbounds in config profile Default"
 ```
 
 ### Project Structure
@@ -519,13 +521,13 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 1.4.0 | **Панель Remnawave:** 2.8.0–2.8.1 | **Контракт:** `@remnawave/backend-contract` 2.8.35
+**Версия:** 1.4.1 | **Панель Remnawave:** 2.8.0–2.8.1 | **Контракт:** `@remnawave/backend-contract` 2.8.35
 
 ### Возможности
 
 - **154 инструмента** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, IP-контролем и метаданными
 - **3 ресурса** — статистика панели, статус нод, проверка здоровья в реальном времени
-- **5 промптов** — пошаговые сценарии для типичных задач
+- **6 промптов** — пошаговые сценарии для типичных задач
 - **Readonly-режим** — ограничение до 70 инструментов только для чтения
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
@@ -812,7 +814,7 @@ npm run build
 | `config_profiles_get_inbounds` | Inbounds по UUID профиля | read |
 | `config_profiles_get_computed_config` | Вычисленный конфиг по UUID профиля | read |
 | `config_profiles_create` | Создать конфиг-профиль | write |
-| `config_profiles_update` | Обновить конфиг-профиль | write |
+| `config_profiles_update` | Обновить имя и/или core-конфиг (Xray/sing-box) профиля | write |
 | `config_profiles_delete` | Удалить конфиг-профиль | write |
 | `config_profiles_reorder` | Переупорядочить конфиг-профили | write |
 
@@ -823,7 +825,7 @@ npm run build
 | `squads_list` | Список групп | read |
 | `squads_accessible_nodes` | Доступные ноды группы | read |
 | `squads_create` | Создать группу | write |
-| `squads_update` | Обновить группу | write |
+| `squads_update` | Обновить имя и/или список inbound группы | write |
 | `squads_delete` | Удалить группу | write |
 | `squads_add_users` | Добавить пользователей в группу | write |
 | `squads_remove_users` | Убрать пользователей из группы | write |
@@ -907,7 +909,7 @@ npm run build
 | `sub_page_configs_list` | Список конфигов страниц | read |
 | `sub_page_configs_get` | Получить конфиг страницы | read |
 | `sub_page_configs_create` | Создать конфиг страницы | write |
-| `sub_page_configs_update` | Обновить конфиг страницы | write |
+| `sub_page_configs_update` | Обновить имя и/или payload конфига страницы | write |
 | `sub_page_configs_delete` | Удалить конфиг страницы | write |
 | `sub_page_configs_reorder` | Переупорядочить | write |
 | `sub_page_configs_clone` | Клонировать конфиг | write |
@@ -921,7 +923,7 @@ npm run build
 | `node_plugins_torrent_reports` | Отчёты торрент-блокировщика | read |
 | `node_plugins_torrent_stats` | Статистика торрент-блокировщика | read |
 | `node_plugins_create` | Создать плагин | write |
-| `node_plugins_update` | Обновить плагин | write |
+| `node_plugins_update` | Обновить имя и/или pluginConfig плагина | write |
 | `node_plugins_delete` | Удалить плагин | write |
 | `node_plugins_reorder` | Переупорядочить плагины | write |
 | `node_plugins_clone` | Клонировать плагин | write |
@@ -964,6 +966,7 @@ npm run build
 | `node_diagnostics` | Диагностика ноды |
 | `traffic_report` | Отчёт по трафику |
 | `user_audit` | Полный аудит пользователя |
+| `edit_config_profile` | Редактирование core-конфига профиля |
 | `bulk_user_cleanup` | Поиск и управление просроченными пользователями |
 
 ### Примеры запросов
@@ -978,6 +981,7 @@ npm run build
 «Покажи историю биллинга»
 «Список плагинов нод»
 «Получи IP-соединения пользователя X»
+«Отредактируй Xray inbounds в конфиг-профиле Default»
 ```
 
 ### Структура проекта

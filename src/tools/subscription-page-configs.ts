@@ -22,9 +22,10 @@ export function registerSubPageConfigTools(server: McpServer, client: RemnawaveC
         try { return toolResult(await client.createSubscriptionPageConfig(params)); } catch (e) { return toolError(e); }
     });
 
-    server.tool('sub_page_configs_update', 'Update a subscription page configuration', {
+    server.tool('sub_page_configs_update', 'Update a subscription page configuration name and/or its config payload. Get the current object with sub_page_configs_get, then pass the full `config` to replace it.', {
         uuid: z.string().describe('Config UUID'),
         name: z.string().optional().describe('New name'),
+        config: z.record(z.unknown()).optional().describe('Subscription page configuration object. Replaces the entire config payload. Omit to leave the existing config unchanged.'),
     }, async (params) => {
         try { return toolResult(await client.updateSubscriptionPageConfig(params)); } catch (e) { return toolError(e); }
     });
