@@ -10,14 +10,14 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 1.4.1 | **Remnawave panel:** 2.8.0–2.8.1 | **Contract:** `@remnawave/backend-contract` 2.8.35
+**Version:** 1.5.0 | **Remnawave panel:** 2.8.0–2.8.1 | **Contract:** `@remnawave/backend-contract` 2.8.35
 
 ### Features
 
-- **154 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription page configs, node plugins, IP control, and metadata
+- **173 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription templates, subscription settings, subscription page configs, node plugins, IP control, bandwidth stats, and metadata
 - **3 resources** — real-time panel stats, node status, health checks
 - **6 prompts** — guided workflows for common tasks
-- **Readonly mode** — restrict to 70 read-only tools for safe monitoring
+- **Readonly mode** — restrict to 83 read-only tools for safe monitoring
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
 - **stdio transport** — works with Cursor, Codex, OpenCode, Claude Desktop, Windsurf, and any MCP-compatible client
@@ -150,19 +150,19 @@ Set `REMNAWAVE_READONLY=true` to disable all write operations (create, update, d
 
 Useful for monitoring dashboards or shared environments where you want to prevent accidental changes.
 
-In readonly mode, the available tools are reduced from 154 to 70:
+In readonly mode, the available tools are reduced from 173 to 83:
 
 | Category | Available tools |
 |----------|----------------|
-| Users (11) | `users_list`, `users_stream`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
+| Users (14) | `users_list`, `users_stream`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_get_by_id`, `users_accessible_nodes`, `users_subscription_request_history`, `users_tags_list`, `users_resolve` |
 | Nodes (3) | `nodes_list`, `nodes_get`, `nodes_tags_list` |
 | Hosts (3) | `hosts_list`, `hosts_get`, `hosts_tags_list` |
 | System (10) | all tools (read-only by nature) |
 | Subscriptions (10) | all tools (read-only by nature) |
 | Config Profiles & Inbounds (5) | `config_profiles_list`, `config_profiles_get`, `inbounds_list`, `config_profiles_get_inbounds`, `config_profiles_get_computed_config` |
-| Internal Squads (2) | `squads_list`, `squads_accessible_nodes` |
+| Internal Squads (3) | `squads_list`, `squads_get`, `squads_accessible_nodes` |
 | HWID (4) | `hwid_devices_list`, `hwid_devices_list_all`, `hwid_stats`, `hwid_top_users` |
-| API Tokens (1) | `api_tokens_list` |
+| API Tokens (2) | `api_tokens_list`, `api_tokens_scopes` |
 | Keygen (1) | `keygen_get` |
 | Infra Billing (4) | `billing_providers_list`, `billing_provider_get`, `billing_nodes_list`, `billing_history_list` |
 | Snippets (1) | `snippets_list` |
@@ -171,6 +171,9 @@ In readonly mode, the available tools are reduced from 154 to 70:
 | Sub Page Configs (2) | `sub_page_configs_list`, `sub_page_configs_get` |
 | Node Plugins (4) | `node_plugins_list`, `node_plugins_get`, `node_plugins_torrent_reports`, `node_plugins_torrent_stats` |
 | IP Control (4) | `ip_control_fetch_ips`, `ip_control_get_fetch_ips_result`, `ip_control_fetch_users_ips`, `ip_control_get_fetch_users_ips_result` |
+| Subscription Templates (2) | `subscription_templates_list`, `subscription_templates_get` |
+| Subscription Settings (1) | `subscription_settings_get` |
+| Bandwidth Stats (5) | `bandwidth_nodes`, `bandwidth_nodes_realtime`, `bandwidth_node_users`, `bandwidth_nodes_users`, `bandwidth_user` |
 | Metadata (2) | `metadata_node_get`, `metadata_user_get` |
 
 ### Docker
@@ -194,7 +197,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 
 ### Available Tools
 
-#### Users (28 tools)
+#### Users (31 tools)
 
 | Tool | Description | Mode |
 |------|-------------|------|
@@ -207,6 +210,9 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `users_get_by_email` | Get user by email | read |
 | `users_get_by_tag` | Get user by tag | read |
 | `users_get_by_subscription_uuid` | Get user by subscription UUID | read |
+| `users_get_by_id` | Get user by numeric ID | read |
+| `users_accessible_nodes` | Get nodes accessible to a user | read |
+| `users_subscription_request_history` | Get user subscription request history | read |
 | `users_tags_list` | List all user tags | read |
 | `users_resolve` | Resolve users by multiple criteria | read |
 | `users_create` | Create a new user | write |
@@ -257,11 +263,11 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `hosts_create` | Create a new host | write |
 | `hosts_update` | Update host settings | write |
 | `hosts_delete` | Delete a host | write |
+| `hosts_reorder` | Reorder hosts | write |
 | `hosts_bulk_enable` | Bulk enable hosts | write |
 | `hosts_bulk_disable` | Bulk disable hosts | write |
 | `hosts_bulk_delete` | Bulk delete hosts | write |
-| `hosts_bulk_set_inbound` | Bulk set host inbound | write |
-| `hosts_bulk_set_port` | Bulk set host port | write |
+| `hosts_bulk_update` | Bulk update hosts (port, inbound, and other fields) | write |
 
 #### System (10 tools)
 
@@ -307,17 +313,19 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `config_profiles_delete` | Delete config profile | write |
 | `config_profiles_reorder` | Reorder config profiles | write |
 
-#### Internal Squads (7 tools)
+#### Internal Squads (9 tools)
 
 | Tool | Description | Mode |
 |------|-------------|------|
 | `squads_list` | List all squads | read |
+| `squads_get` | Get squad by UUID | read |
 | `squads_accessible_nodes` | Get squad accessible nodes | read |
 | `squads_create` | Create a squad | write |
 | `squads_update` | Update a squad name and/or inbound list | write |
 | `squads_delete` | Delete a squad | write |
 | `squads_add_users` | Add users to a squad | write |
 | `squads_remove_users` | Remove users from a squad | write |
+| `squads_reorder` | Reorder squads | write |
 
 #### HWID Devices (7 tools)
 
@@ -331,11 +339,12 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `hwid_device_delete` | Delete a specific device | write |
 | `hwid_devices_delete_all` | Delete all user's devices | write |
 
-#### API Tokens (3 tools)
+#### API Tokens (4 tools)
 
 | Tool | Description | Mode |
 |------|-------------|------|
 | `api_tokens_list` | List API tokens | read |
+| `api_tokens_scopes` | List available API token scopes | read |
 | `api_tokens_create` | Create API token | write |
 | `api_tokens_delete` | Delete API token | write |
 
@@ -390,6 +399,34 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 |------|-------------|------|
 | `settings_get` | Get panel settings | read |
 | `settings_update` | Update panel settings | write |
+
+#### Subscription Templates (6 tools)
+
+| Tool | Description | Mode |
+|------|-------------|------|
+| `subscription_templates_list` | List subscription templates | read |
+| `subscription_templates_get` | Get subscription template by UUID | read |
+| `subscription_templates_create` | Create subscription template | write |
+| `subscription_templates_update` | Update subscription template | write |
+| `subscription_templates_delete` | Delete subscription template | write |
+| `subscription_templates_reorder` | Reorder subscription templates | write |
+
+#### Subscription Settings (2 tools)
+
+| Tool | Description | Mode |
+|------|-------------|------|
+| `subscription_settings_get` | Get subscription settings | read |
+| `subscription_settings_update` | Update subscription settings | write |
+
+#### Bandwidth Stats (5 tools)
+
+| Tool | Description | Mode |
+|------|-------------|------|
+| `bandwidth_nodes` | Bandwidth usage across nodes | read |
+| `bandwidth_nodes_realtime` | Realtime node bandwidth | read |
+| `bandwidth_node_users` | Bandwidth by users on a node | read |
+| `bandwidth_nodes_users` | Bandwidth by users across nodes | read |
+| `bandwidth_user` | Bandwidth usage for a user | read |
 
 #### Subscription Page Configs (7 tools)
 
@@ -485,13 +522,14 @@ src/
 ├── tools/
 │   ├── helpers.ts                 # Result formatting helpers
 │   ├── index.ts                   # Tool registration
-│   ├── users.ts                   # User management (28 tools)
+│   ├── users.ts                   # User management (31 tools)
 │   ├── nodes.ts                   # Node management (15 tools)
 │   ├── hosts.ts                   # Host management (11 tools)
+│   ├── bandwidth-stats.ts        # Bandwidth stats (5 tools)
 │   ├── system.ts                  # System & auth (10 tools)
 │   ├── subscriptions.ts           # Subscriptions (10 tools)
 │   ├── inbounds.ts                # Config profiles & inbounds (9 tools)
-│   ├── squads.ts                  # Internal squads (7 tools)
+│   ├── squads.ts                  # Internal squads (9 tools)
 │   ├── hwid.ts                    # HWID devices (7 tools)
 │   ├── infra-billing.ts           # Infrastructure billing (12 tools)
 │   ├── node-plugins.ts            # Node plugins (11 tools)
@@ -500,7 +538,9 @@ src/
 │   ├── ip-control.ts              # IP control (5 tools)
 │   ├── snippets.ts                # Snippets (4 tools)
 │   ├── metadata.ts                # Node & user metadata (4 tools)
-│   ├── api-tokens.ts              # API tokens (3 tools)
+│   ├── api-tokens.ts              # API tokens (4 tools)
+│   ├── subscription-templates.ts # Subscription templates (6 tools)
+│   ├── subscription-settings.ts  # Subscription settings (2 tools)
 │   ├── settings.ts                # Panel settings (2 tools)
 │   └── keygen.ts                  # Keygen (1 tool)
 ├── resources/
@@ -521,14 +561,14 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 1.4.1 | **Панель Remnawave:** 2.8.0–2.8.1 | **Контракт:** `@remnawave/backend-contract` 2.8.35
+**Версия:** 1.5.0 | **Панель Remnawave:** 2.8.0–2.8.1 | **Контракт:** `@remnawave/backend-contract` 2.8.35
 
 ### Возможности
 
-- **154 инструмента** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, страницами подписок, плагинами нод, IP-контролем и метаданными
+- **173 инструмента** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, шаблонами подписок, настройками подписок, страницами подписок, плагинами нод, IP-контролем, статистикой bandwidth и метаданными
 - **3 ресурса** — статистика панели, статус нод, проверка здоровья в реальном времени
 - **6 промптов** — пошаговые сценарии для типичных задач
-- **Readonly-режим** — ограничение до 70 инструментов только для чтения
+- **Readonly-режим** — ограничение до 83 инструментов только для чтения
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
 - **stdio транспорт** — работает с Cursor, Codex, OpenCode, Claude Desktop, Windsurf и любым MCP-совместимым клиентом
@@ -661,19 +701,19 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Полезно для мониторинговых дашбордов или общих окружений, где нужно исключить случайные изменения.
 
-В readonly-режиме количество доступных инструментов сокращается с 154 до 70:
+В readonly-режиме количество доступных инструментов сокращается с 173 до 83:
 
 | Категория | Доступные инструменты |
 |-----------|----------------------|
-| Пользователи (11) | `users_list`, `users_stream`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_tags_list`, `users_resolve` |
+| Пользователи (14) | `users_list`, `users_stream`, `users_get`, `users_get_by_username`, `users_get_by_short_uuid`, `users_get_by_telegram_id`, `users_get_by_email`, `users_get_by_tag`, `users_get_by_subscription_uuid`, `users_get_by_id`, `users_accessible_nodes`, `users_subscription_request_history`, `users_tags_list`, `users_resolve` |
 | Ноды (3) | `nodes_list`, `nodes_get`, `nodes_tags_list` |
 | Хосты (3) | `hosts_list`, `hosts_get`, `hosts_tags_list` |
 | Система (10) | все инструменты (только чтение по природе) |
 | Подписки (10) | все инструменты (только чтение по природе) |
 | Конфиг-профили и Inbounds (5) | `config_profiles_list`, `config_profiles_get`, `inbounds_list`, `config_profiles_get_inbounds`, `config_profiles_get_computed_config` |
-| Внутренние группы (2) | `squads_list`, `squads_accessible_nodes` |
+| Внутренние группы (3) | `squads_list`, `squads_get`, `squads_accessible_nodes` |
 | HWID (4) | `hwid_devices_list`, `hwid_devices_list_all`, `hwid_stats`, `hwid_top_users` |
-| API-токены (1) | `api_tokens_list` |
+| API-токены (2) | `api_tokens_list`, `api_tokens_scopes` |
 | Keygen (1) | `keygen_get` |
 | Биллинг (4) | `billing_providers_list`, `billing_provider_get`, `billing_nodes_list`, `billing_history_list` |
 | Сниппеты (1) | `snippets_list` |
@@ -682,6 +722,9 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 | Страницы подписок (2) | `sub_page_configs_list`, `sub_page_configs_get` |
 | Плагины нод (4) | `node_plugins_list`, `node_plugins_get`, `node_plugins_torrent_reports`, `node_plugins_torrent_stats` |
 | IP-контроль (4) | `ip_control_fetch_ips`, `ip_control_get_fetch_ips_result`, `ip_control_fetch_users_ips`, `ip_control_get_fetch_users_ips_result` |
+| Шаблоны подписок (2) | `subscription_templates_list`, `subscription_templates_get` |
+| Настройки подписок (1) | `subscription_settings_get` |
+| Bandwidth Stats (5) | `bandwidth_nodes`, `bandwidth_nodes_realtime`, `bandwidth_node_users`, `bandwidth_nodes_users`, `bandwidth_user` |
 | Метаданные (2) | `metadata_node_get`, `metadata_user_get` |
 
 ### Docker
@@ -705,7 +748,7 @@ npm run build
 
 ### Доступные инструменты
 
-#### Пользователи (28 инструментов)
+#### Пользователи (31 инструмент)
 
 | Инструмент | Описание | Режим |
 |------------|----------|-------|
@@ -718,6 +761,9 @@ npm run build
 | `users_get_by_email` | Получить пользователя по email | read |
 | `users_get_by_tag` | Получить пользователя по тегу | read |
 | `users_get_by_subscription_uuid` | Получить пользователя по UUID подписки | read |
+| `users_get_by_id` | Получить пользователя по числовому ID | read |
+| `users_accessible_nodes` | Ноды, доступные пользователю | read |
+| `users_subscription_request_history` | История запросов подписки пользователя | read |
 | `users_tags_list` | Список тегов пользователей | read |
 | `users_resolve` | Поиск пользователей по нескольким критериям | read |
 | `users_create` | Создать нового пользователя | write |
@@ -768,11 +814,11 @@ npm run build
 | `hosts_create` | Создать новый хост | write |
 | `hosts_update` | Обновить настройки хоста | write |
 | `hosts_delete` | Удалить хост | write |
+| `hosts_reorder` | Изменить порядок хостов | write |
 | `hosts_bulk_enable` | Массовое включение хостов | write |
 | `hosts_bulk_disable` | Массовое отключение хостов | write |
 | `hosts_bulk_delete` | Массовое удаление хостов | write |
-| `hosts_bulk_set_inbound` | Массовая установка inbound | write |
-| `hosts_bulk_set_port` | Массовая установка порта | write |
+| `hosts_bulk_update` | Массовое обновление хостов (порт, inbound и др.) | write |
 
 #### Система (10 инструментов)
 
@@ -818,17 +864,19 @@ npm run build
 | `config_profiles_delete` | Удалить конфиг-профиль | write |
 | `config_profiles_reorder` | Переупорядочить конфиг-профили | write |
 
-#### Внутренние группы (7 инструментов)
+#### Внутренние группы (9 инструментов)
 
 | Инструмент | Описание | Режим |
 |------------|----------|-------|
 | `squads_list` | Список групп | read |
+| `squads_get` | Получить группу по UUID | read |
 | `squads_accessible_nodes` | Доступные ноды группы | read |
 | `squads_create` | Создать группу | write |
 | `squads_update` | Обновить имя и/или список inbound группы | write |
 | `squads_delete` | Удалить группу | write |
 | `squads_add_users` | Добавить пользователей в группу | write |
 | `squads_remove_users` | Убрать пользователей из группы | write |
+| `squads_reorder` | Изменить порядок групп | write |
 
 #### HWID-устройства (7 инструментов)
 
@@ -842,11 +890,12 @@ npm run build
 | `hwid_device_delete` | Удалить конкретное устройство | write |
 | `hwid_devices_delete_all` | Удалить все устройства пользователя | write |
 
-#### API-токены (3 инструмента)
+#### API-токены (4 инструмента)
 
 | Инструмент | Описание | Режим |
 |------------|----------|-------|
 | `api_tokens_list` | Список API-токенов | read |
+| `api_tokens_scopes` | Список доступных scope API-токенов | read |
 | `api_tokens_create` | Создать API-токен | write |
 | `api_tokens_delete` | Удалить API-токен | write |
 
@@ -901,6 +950,34 @@ npm run build
 |------------|----------|-------|
 | `settings_get` | Получить настройки панели | read |
 | `settings_update` | Обновить настройки панели | write |
+
+#### Шаблоны подписок (6 инструментов)
+
+| Инструмент | Описание | Режим |
+|------------|----------|-------|
+| `subscription_templates_list` | Список шаблонов подписок | read |
+| `subscription_templates_get` | Получить шаблон по UUID | read |
+| `subscription_templates_create` | Создать шаблон подписки | write |
+| `subscription_templates_update` | Обновить шаблон подписки | write |
+| `subscription_templates_delete` | Удалить шаблон подписки | write |
+| `subscription_templates_reorder` | Изменить порядок шаблонов | write |
+
+#### Настройки подписок (2 инструмента)
+
+| Инструмент | Описание | Режим |
+|------------|----------|-------|
+| `subscription_settings_get` | Получить настройки подписок | read |
+| `subscription_settings_update` | Обновить настройки подписок | write |
+
+#### Bandwidth Stats (5 инструментов)
+
+| Инструмент | Описание | Режим |
+|------------|----------|-------|
+| `bandwidth_nodes` | Использование bandwidth по нодам | read |
+| `bandwidth_nodes_realtime` | Realtime bandwidth нод | read |
+| `bandwidth_node_users` | Bandwidth пользователей на ноде | read |
+| `bandwidth_nodes_users` | Bandwidth пользователей по нодам | read |
+| `bandwidth_user` | Bandwidth конкретного пользователя | read |
 
 #### Страницы подписок (7 инструментов)
 
@@ -996,22 +1073,25 @@ src/
 ├── tools/
 │   ├── helpers.ts                 # Хелперы форматирования
 │   ├── index.ts                   # Регистрация инструментов
-│   ├── users.ts                   # Управление пользователями (28)
+│   ├── users.ts                   # Управление пользователями (31)
 │   ├── nodes.ts                   # Управление нодами (15)
 │   ├── hosts.ts                   # Управление хостами (11)
+│   ├── bandwidth-stats.ts         # Статистика bandwidth (5)
 │   ├── system.ts                  # Система и авторизация (10)
 │   ├── subscriptions.ts           # Подписки (10)
 │   ├── inbounds.ts                # Конфиг-профили и inbounds (9)
-│   ├── squads.ts                  # Внутренние группы (7)
+│   ├── squads.ts                  # Внутренние группы (9)
 │   ├── hwid.ts                    # HWID-устройства (7)
 │   ├── infra-billing.ts           # Биллинг инфраструктуры (12)
 │   ├── node-plugins.ts            # Плагины нод (11)
 │   ├── external-squads.ts         # Внешние группы (8)
 │   ├── subscription-page-configs.ts # Страницы подписок (7)
+│   ├── subscription-templates.ts  # Шаблоны подписок (6)
+│   ├── subscription-settings.ts   # Настройки подписок (2)
 │   ├── ip-control.ts              # IP-контроль (5)
 │   ├── snippets.ts                # Сниппеты (4)
 │   ├── metadata.ts                # Метаданные нод и пользователей (4)
-│   ├── api-tokens.ts              # API-токены (3)
+│   ├── api-tokens.ts              # API-токены (4)
 │   ├── settings.ts                # Настройки панели (2)
 │   └── keygen.ts                  # Keygen (1)
 ├── resources/

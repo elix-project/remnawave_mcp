@@ -8,6 +8,10 @@ export function registerApiTokenTools(server: McpServer, client: RemnawaveClient
         try { return toolResult(await client.getApiTokens()); } catch (e) { return toolError(e); }
     });
 
+    server.tool('api_tokens_scopes', 'List available API token scopes', {}, async () => {
+        try { return toolResult(await client.getApiTokenScopes()); } catch (e) { return toolError(e); }
+    });
+
     if (readonly) return;
 
     server.tool('api_tokens_create', 'Create a new API token', {

@@ -326,6 +326,28 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
     );
 
     server.tool(
+        'hosts_reorder',
+        'Reorder hosts',
+        {
+            hosts: z
+                .array(
+                    z.object({
+                        viewPosition: z.number().describe('Sort position (0-based)'),
+                        uuid: z.string().describe('Host UUID'),
+                    }),
+                )
+                .describe('Ordered array of { viewPosition, uuid } objects'),
+        },
+        async ({ hosts }) => {
+            try {
+                return toolResult(await client.reorderHosts(hosts));
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'hosts_bulk_enable',
         'Bulk enable selected hosts',
         { uuids: z.array(z.string()).describe('Array of host UUIDs') },
@@ -353,27 +375,42 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
     );
 
     server.tool(
-        'hosts_bulk_set_inbound',
-        'Bulk set inbound for selected hosts',
+        'hosts_bulk_update',
+        'Bulk update selected hosts (port, inbound, tags, address, and other host fields)',
         {
             uuids: z.array(z.string()).describe('Array of host UUIDs'),
-            configProfileUuid: z.string().describe('Config profile UUID'),
-            configProfileInboundUuid: z.string().describe('Inbound UUID'),
+            port: z.number().optional().describe('New port number'),
+            inbound: z
+                .object({
+                    configProfileUuid: z.string().describe('Config profile UUID'),
+                    configProfileInboundUuid: z.string().describe('Inbound UUID'),
+                })
+                .optional()
+                .describe('Inbound profile mapping to apply'),
+            remark: z.string().optional().describe('Host remark/name'),
+            address: z.string().optional().describe('Host address'),
+            path: z.string().nullable().optional().describe('Path'),
+            sni: z.string().nullable().optional().describe('SNI'),
+            host: z.string().nullable().optional().describe('Host header'),
+            tags: z.array(z.string()).optional().describe('Host tags'),
+            nodes: z.array(z.string()).optional().describe('Node UUIDs'),
+            isDisabled: z.boolean().optional().describe('Disable host'),
+            isHidden: z.boolean().optional().describe('Hide host'),
+            securityLayer: z
+                .enum(['DEFAULT', 'TLS', 'NONE'])
+                .optional()
+                .describe('Security layer'),
+            excludeFromSubscriptionTypes: z
+                .array(z.enum(SUBSCRIPTION_TYPES))
+                .optional()
+                .describe('Subscription types to exclude from'),
+            excludedInternalSquads: z
+                .array(z.string())
+                .optional()
+                .describe('Internal squad UUIDs to exclude'),
         },
         async (params) => {
-            try { return toolResult(await client.bulkSetHostInbound(params)); } catch (e) { return toolError(e); }
-        },
-    );
-
-    server.tool(
-        'hosts_bulk_set_port',
-        'Bulk set port for selected hosts',
-        {
-            uuids: z.array(z.string()).describe('Array of host UUIDs'),
-            port: z.number().describe('New port number'),
-        },
-        async (params) => {
-            try { return toolResult(await client.bulkSetHostPort(params)); } catch (e) { return toolError(e); }
+            try { return toolResult(await client.bulkUpdateHosts(params)); } catch (e) { return toolError(e); }
         },
     );
 }

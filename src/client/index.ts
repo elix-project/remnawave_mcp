@@ -122,6 +122,14 @@ export class RemnawaveClient {
         return this.get(REST_API.USERS.GET_BY.SUBSCRIPTION_UUID(subscriptionUuid));
     }
 
+    async getUserAccessibleNodes(uuid: string) {
+        return this.get(REST_API.USERS.ACCESSIBLE_NODES(uuid));
+    }
+
+    async getUserSubscriptionRequestHistory(uuid: string) {
+        return this.get(REST_API.USERS.SUBSCRIPTION_REQUEST_HISTORY(uuid));
+    }
+
     async getUserTags() {
         return this.get(REST_API.USERS.TAGS.GET);
     }
@@ -286,6 +294,10 @@ export class RemnawaveClient {
         return this.delete(REST_API.HOSTS.DELETE(uuid));
     }
 
+    async reorderHosts(hosts: Array<{ viewPosition: number; uuid: string }>) {
+        return this.post(REST_API.HOSTS.ACTIONS.REORDER, { hosts });
+    }
+
     async bulkEnableHosts(params: Record<string, unknown>) {
         return this.post(REST_API.HOSTS.BULK.ENABLE_HOSTS, params);
     }
@@ -298,12 +310,8 @@ export class RemnawaveClient {
         return this.post(REST_API.HOSTS.BULK.DELETE_HOSTS, params);
     }
 
-    async bulkSetHostInbound(params: Record<string, unknown>) {
-        return this.post(REST_API.HOSTS.BULK.SET_INBOUND, params);
-    }
-
-    async bulkSetHostPort(params: Record<string, unknown>) {
-        return this.post(REST_API.HOSTS.BULK.SET_PORT, params);
+    async bulkUpdateHosts(params: Record<string, unknown>) {
+        return this.post(REST_API.HOSTS.BULK.UPDATE, params);
     }
 
     // System
@@ -432,6 +440,10 @@ export class RemnawaveClient {
         return this.get(REST_API.INTERNAL_SQUADS.GET);
     }
 
+    async getInternalSquadByUuid(uuid: string) {
+        return this.get(REST_API.INTERNAL_SQUADS.GET_BY_UUID(uuid));
+    }
+
     async getSquadAccessibleNodes(uuid: string) {
         return this.get(REST_API.INTERNAL_SQUADS.ACCESSIBLE_NODES(uuid));
     }
@@ -460,6 +472,10 @@ export class RemnawaveClient {
             REST_API.INTERNAL_SQUADS.BULK_ACTIONS.REMOVE_USERS(squadUuid),
             { userUuids },
         );
+    }
+
+    async reorderInternalSquads(params: Record<string, unknown>) {
+        return this.post(REST_API.INTERNAL_SQUADS.ACTIONS.REORDER, params);
     }
 
     // HWID
@@ -499,16 +515,74 @@ export class RemnawaveClient {
 
     // Bandwidth Stats
 
-    async getNodesBandwidth() {
-        return this.get(REST_API.BANDWIDTH_STATS.NODES.GET);
+    async getNodesBandwidth(query: {
+        start: string;
+        end: string;
+        topNodesLimit?: number;
+    }) {
+        const params = new URLSearchParams({
+            start: query.start,
+            end: query.end,
+        });
+        if (query.topNodesLimit !== undefined) {
+            params.set('topNodesLimit', String(query.topNodesLimit));
+        }
+        return this.get(
+            `${REST_API.BANDWIDTH_STATS.NODES.GET}?${params.toString()}`,
+        );
     }
 
     async getNodesRealtimeBandwidth() {
         return this.get(REST_API.BANDWIDTH_STATS.NODES.GET_REALTIME);
     }
 
-    async getUserBandwidthByUuid(uuid: string) {
-        return this.get(REST_API.BANDWIDTH_STATS.USERS.GET_BY_UUID(uuid));
+    async getNodeUsersBandwidth(
+        uuid: string,
+        query: { start: string; end: string; topUsersLimit?: number },
+    ) {
+        const params = new URLSearchParams({
+            start: query.start,
+            end: query.end,
+        });
+        if (query.topUsersLimit !== undefined) {
+            params.set('topUsersLimit', String(query.topUsersLimit));
+        }
+        return this.get(
+            `${REST_API.BANDWIDTH_STATS.NODES.GET_USERS(uuid)}?${params.toString()}`,
+        );
+    }
+
+    async getNodesUsersBandwidth(params: {
+        nodesUuids: string[];
+        start: string;
+        end: string;
+        topUsersLimit?: number;
+    }) {
+        const { nodesUuids, start, end, topUsersLimit } = params;
+        const query = new URLSearchParams({ start, end });
+        if (topUsersLimit !== undefined) {
+            query.set('topUsersLimit', String(topUsersLimit));
+        }
+        return this.post(
+            `${REST_API.BANDWIDTH_STATS.NODES.GET_USERS_BY_NODES}?${query.toString()}`,
+            { nodesUuids },
+        );
+    }
+
+    async getUserBandwidthByUuid(
+        uuid: string,
+        query: { start: string; end: string; topNodesLimit?: number },
+    ) {
+        const params = new URLSearchParams({
+            start: query.start,
+            end: query.end,
+        });
+        if (query.topNodesLimit !== undefined) {
+            params.set('topNodesLimit', String(query.topNodesLimit));
+        }
+        return this.get(
+            `${REST_API.BANDWIDTH_STATS.USERS.GET_BY_UUID(uuid)}?${params.toString()}`,
+        );
     }
 
     // Auth
@@ -523,12 +597,52 @@ export class RemnawaveClient {
         return this.get(REST_API.API_TOKENS.GET);
     }
 
+    async getApiTokenScopes() {
+        return this.get(REST_API.API_TOKENS.GET_SCOPES);
+    }
+
     async createApiToken(params: Record<string, unknown>) {
         return this.post(REST_API.API_TOKENS.CREATE, params);
     }
 
     async deleteApiToken(uuid: string) {
         return this.delete(REST_API.API_TOKENS.DELETE(uuid));
+    }
+
+    // Subscription Templates
+
+    async getSubscriptionTemplates() {
+        return this.get(REST_API.SUBSCRIPTION_TEMPLATE.GET_ALL);
+    }
+
+    async getSubscriptionTemplateByUuid(uuid: string) {
+        return this.get(REST_API.SUBSCRIPTION_TEMPLATE.GET(uuid));
+    }
+
+    async createSubscriptionTemplate(params: Record<string, unknown>) {
+        return this.post(REST_API.SUBSCRIPTION_TEMPLATE.CREATE, params);
+    }
+
+    async updateSubscriptionTemplate(params: Record<string, unknown>) {
+        return this.patch(REST_API.SUBSCRIPTION_TEMPLATE.UPDATE, params);
+    }
+
+    async deleteSubscriptionTemplate(uuid: string) {
+        return this.delete(REST_API.SUBSCRIPTION_TEMPLATE.DELETE(uuid));
+    }
+
+    async reorderSubscriptionTemplates(params: Record<string, unknown>) {
+        return this.post(REST_API.SUBSCRIPTION_TEMPLATE.ACTIONS.REORDER, params);
+    }
+
+    // Subscription Settings
+
+    async getSubscriptionSettings() {
+        return this.get(REST_API.SUBSCRIPTION_SETTINGS.GET);
+    }
+
+    async updateSubscriptionSettings(params: Record<string, unknown>) {
+        return this.patch(REST_API.SUBSCRIPTION_SETTINGS.UPDATE, params);
     }
 
     // Keygen

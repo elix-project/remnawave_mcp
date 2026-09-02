@@ -23,6 +23,22 @@ export function registerSquadTools(
     );
 
     server.tool(
+        'squads_get',
+        'Get an internal squad by UUID',
+        {
+            uuid: z.string().describe('Squad UUID'),
+        },
+        async ({ uuid }) => {
+            try {
+                const result = await client.getInternalSquadByUuid(uuid);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'squads_accessible_nodes',
         'Get nodes accessible to a specific squad',
         {
@@ -134,6 +150,29 @@ export function registerSquadTools(
                     squadUuid,
                     userUuids,
                 );
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'squads_reorder',
+        'Reorder internal squads',
+        {
+            items: z
+                .array(
+                    z.object({
+                        viewPosition: z.number().describe('Sort position (0-based)'),
+                        uuid: z.string().describe('Squad UUID'),
+                    }),
+                )
+                .describe('Ordered array of { viewPosition, uuid } objects'),
+        },
+        async (params) => {
+            try {
+                const result = await client.reorderInternalSquads(params);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
