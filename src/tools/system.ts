@@ -134,6 +134,51 @@ export function registerSystemTools(
     );
 
     server.tool(
+        'system_configuration',
+        'Get Remnawave panel configuration (notifications, service flags, short UUID length)',
+        {},
+        async () => {
+            try {
+                const result = await client.getSystemConfiguration();
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'system_stats_digest',
+        'Get aggregated stats digest for a datetime range (created/expired users, traffic, HWID)',
+        {
+            start: z.string().describe('Start datetime (ISO 8601)'),
+            end: z.string().describe('End datetime (ISO 8601)'),
+        },
+        async (params) => {
+            try {
+                const result = await client.getStatsDigest(params);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'system_stats_http',
+        'Get HTTP route usage statistics',
+        {},
+        async () => {
+            try {
+                const result = await client.getHttpStats();
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'system_srr_matcher',
         'Test subscription request routing rules',
         {

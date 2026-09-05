@@ -54,3 +54,20 @@ test('squads_update exposes optional inbounds', () => {
 test('edit_config_profile prompt is registered', () => {
     assert.match(dist, /"edit_config_profile"/);
 });
+
+test('contract 3.4 tools replace IP control with connections', () => {
+    for (const tool of [
+        'connections_by_user',
+        'connections_drop',
+        'node_integrations_list',
+        'node_ssh_create_ticket',
+        'shared_lists_list',
+        'users_extend_expiration',
+        'system_stats_digest',
+    ]) {
+        assert.notEqual(dist.indexOf(`"${tool}"`), -1, `missing tool ${tool}`);
+    }
+    assert.equal(dist.indexOf('"ip_control_fetch_ips"'), -1);
+    assert.equal(dist.indexOf('"users_get_by_telegram_id"'), -1);
+    assert.match(dist, /@remnawave\/backend-contract\/build\/backend\/api\/routes\.js/);
+});

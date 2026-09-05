@@ -8,7 +8,7 @@ import { registerAllPrompts } from './prompts/index.js';
 export function createServer(config: Config): McpServer {
     const server = new McpServer({
         name: 'remnawave-mcp',
-        version: '1.4.1',
+        version: '1.6.0',
     });
 
     const client = new RemnawaveClient(config);

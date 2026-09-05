@@ -39,6 +39,20 @@ export function registerSquadTools(
     );
 
     server.tool(
+        'squads_tags_list',
+        'List all internal squad tags',
+        {},
+        async () => {
+            try {
+                const result = await client.getInternalSquadTags();
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'squads_accessible_nodes',
         'Get nodes accessible to a specific squad',
         {
@@ -115,19 +129,16 @@ export function registerSquadTools(
 
     server.tool(
         'squads_add_users',
-        'Add users to an internal squad',
+        'Add selected users to an internal squad',
         {
             squadUuid: z.string().describe('Squad UUID'),
-            userUuids: z
-                .array(z.string())
-                .describe('Array of user UUIDs to add'),
+            userIds: z
+                .array(z.number())
+                .describe('Array of user numeric IDs to add'),
         },
-        async ({ squadUuid, userUuids }) => {
+        async ({ squadUuid, userIds }) => {
             try {
-                const result = await client.addUsersToSquad(
-                    squadUuid,
-                    userUuids,
-                );
+                const result = await client.addUsersToSquad(squadUuid, userIds);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -137,19 +148,68 @@ export function registerSquadTools(
 
     server.tool(
         'squads_remove_users',
-        'Remove users from an internal squad',
+        'Remove selected users from an internal squad',
         {
             squadUuid: z.string().describe('Squad UUID'),
-            userUuids: z
-                .array(z.string())
-                .describe('Array of user UUIDs to remove'),
+            userIds: z
+                .array(z.number())
+                .describe('Array of user numeric IDs to remove'),
         },
-        async ({ squadUuid, userUuids }) => {
+        async ({ squadUuid, userIds }) => {
             try {
                 const result = await client.removeUsersFromSquad(
                     squadUuid,
-                    userUuids,
+                    userIds,
                 );
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'squads_add_all_users',
+        'Add ALL users to an internal squad',
+        {
+            squadUuid: z.string().describe('Squad UUID'),
+        },
+        async ({ squadUuid }) => {
+            try {
+                const result = await client.addAllUsersToSquad(squadUuid);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'squads_remove_all_users',
+        'Remove ALL users from an internal squad',
+        {
+            squadUuid: z.string().describe('Squad UUID'),
+        },
+        async ({ squadUuid }) => {
+            try {
+                const result = await client.removeAllUsersFromSquad(squadUuid);
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'squads_tags_set',
+        'Set tags for an internal squad',
+        {
+            uuid: z.string().describe('Squad UUID'),
+            tags: z.array(z.string()).describe('Tags to assign'),
+        },
+        async (params) => {
+            try {
+                const result = await client.setInternalSquadTags(params);
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);

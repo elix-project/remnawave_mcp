@@ -69,6 +69,20 @@ export function registerInboundTools(
     );
 
     server.tool(
+        'config_profiles_tags_list',
+        'List all config profile tags',
+        {},
+        async () => {
+            try {
+                const result = await client.getConfigProfileTags();
+                return toolResult(result);
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'config_profiles_get_computed_config',
         'Get computed configuration for a config profile',
         {
@@ -140,6 +154,23 @@ export function registerInboundTools(
             try {
                 await client.deleteConfigProfile(uuid);
                 return toolResult({ success: true, message: `Profile ${uuid} deleted` });
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'config_profiles_tags_set',
+        'Set tags for a config profile',
+        {
+            uuid: z.string().describe('Config profile UUID'),
+            tags: z.array(z.string()).describe('Tags to assign'),
+        },
+        async (params) => {
+            try {
+                const result = await client.setConfigProfileTags(params);
+                return toolResult(result);
             } catch (e) {
                 return toolError(e);
             }

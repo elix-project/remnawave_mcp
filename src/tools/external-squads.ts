@@ -14,6 +14,10 @@ export function registerExternalSquadTools(server: McpServer, client: RemnawaveC
         try { return toolResult(await client.getExternalSquadByUuid(uuid)); } catch (e) { return toolError(e); }
     });
 
+    server.tool('external_squads_tags_list', 'List all external squad tags', {}, async () => {
+        try { return toolResult(await client.getExternalSquadTags()); } catch (e) { return toolError(e); }
+    });
+
     if (readonly) return;
 
     server.tool('external_squads_create', 'Create a new external squad', {
@@ -35,18 +39,23 @@ export function registerExternalSquadTools(server: McpServer, client: RemnawaveC
         try { await client.deleteExternalSquad(uuid); return toolResult({ success: true, message: `Squad ${uuid} deleted` }); } catch (e) { return toolError(e); }
     });
 
-    server.tool('external_squads_add_users', 'Add users to an external squad', {
+    server.tool('external_squads_add_users', 'Add ALL users to an external squad', {
         squadUuid: z.string().describe('Squad UUID'),
-        userUuids: z.array(z.string()).describe('Array of user UUIDs to add'),
-    }, async ({ squadUuid, userUuids }) => {
-        try { return toolResult(await client.addUsersToExternalSquad(squadUuid, userUuids)); } catch (e) { return toolError(e); }
+    }, async ({ squadUuid }) => {
+        try { return toolResult(await client.addUsersToExternalSquad(squadUuid)); } catch (e) { return toolError(e); }
     });
 
-    server.tool('external_squads_remove_users', 'Remove users from an external squad', {
+    server.tool('external_squads_remove_users', 'Remove ALL users from an external squad', {
         squadUuid: z.string().describe('Squad UUID'),
-        userUuids: z.array(z.string()).describe('Array of user UUIDs to remove'),
-    }, async ({ squadUuid, userUuids }) => {
-        try { return toolResult(await client.removeUsersFromExternalSquad(squadUuid, userUuids)); } catch (e) { return toolError(e); }
+    }, async ({ squadUuid }) => {
+        try { return toolResult(await client.removeUsersFromExternalSquad(squadUuid)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('external_squads_tags_set', 'Set tags for an external squad', {
+        uuid: z.string().describe('Squad UUID'),
+        tags: z.array(z.string()).describe('Tags to assign'),
+    }, async (params) => {
+        try { return toolResult(await client.setExternalSquadTags(params)); } catch (e) { return toolError(e); }
     });
 
     server.tool('external_squads_reorder', 'Reorder external squads', {

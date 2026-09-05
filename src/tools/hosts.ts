@@ -348,6 +348,21 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
     );
 
     server.tool(
+        'hosts_clone',
+        'Clone an existing host',
+        {
+            cloneFromUuid: z.string().describe('Host UUID to clone'),
+        },
+        async (params) => {
+            try {
+                return toolResult(await client.cloneHost(params));
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'hosts_bulk_enable',
         'Bulk enable selected hosts',
         { uuids: z.array(z.string()).describe('Array of host UUIDs') },

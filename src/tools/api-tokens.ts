@@ -12,6 +12,10 @@ export function registerApiTokenTools(server: McpServer, client: RemnawaveClient
         try { return toolResult(await client.getApiTokenScopes()); } catch (e) { return toolError(e); }
     });
 
+    server.tool('api_tokens_ott', 'Get a one-time API token (OTT)', {}, async () => {
+        try { return toolResult(await client.getApiTokenOtt()); } catch (e) { return toolError(e); }
+    });
+
     if (readonly) return;
 
     server.tool('api_tokens_create', 'Create a new API token', {
