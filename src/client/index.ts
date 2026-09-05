@@ -691,7 +691,7 @@ export class RemnawaveClient {
     }
 
     async getApiTokenOtt() {
-        return this.get(REST_API.API_TOKENS.OTT);
+        return this.post(REST_API.API_TOKENS.OTT);
     }
 
     async createApiToken(params: Record<string, unknown>) {
@@ -817,7 +817,7 @@ export class RemnawaveClient {
     }
 
     async deleteSnippet(params: Record<string, unknown>) {
-        return this.post(REST_API.SNIPPETS.DELETE, params);
+        return this.delete(REST_API.SNIPPETS.DELETE, params);
     }
 
     async syncSnippet(params: Record<string, unknown>) {
@@ -1067,15 +1067,15 @@ export class RemnawaveClient {
         return this.get(REST_API.METADATA.NODE.GET(uuid));
     }
 
-    async upsertNodeMetadata(uuid: string, params: Record<string, unknown>) {
-        return this.put(REST_API.METADATA.NODE.UPSERT(uuid), params);
+    async upsertNodeMetadata(uuid: string, metadata: Record<string, unknown>) {
+        return this.put(REST_API.METADATA.NODE.UPSERT(uuid), { metadata });
     }
 
     async getUserMetadata(userId: number | string) {
         return this.get(REST_API.METADATA.USER.GET(String(userId)));
     }
 
-    async upsertUserMetadata(userId: number | string, params: Record<string, unknown>) {
-        return this.put(REST_API.METADATA.USER.UPSERT(String(userId)), params);
+    async upsertUserMetadata(userId: number | string, metadata: Record<string, unknown>) {
+        return this.put(REST_API.METADATA.USER.UPSERT(String(userId)), { metadata });
     }
 }

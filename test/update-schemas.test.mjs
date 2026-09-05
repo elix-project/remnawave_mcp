@@ -71,3 +71,17 @@ test('contract 3.4 tools replace IP control with connections', () => {
     assert.equal(dist.indexOf('"users_get_by_telegram_id"'), -1);
     assert.match(dist, /@remnawave\/backend-contract\/build\/backend\/api\/routes\.js/);
 });
+
+test('api_tokens_create uses 3.4 name and expiresInDays', () => {
+    const slice = toolSlice('api_tokens_create');
+    assert.match(slice, /name:\s*\w+(?:\.\w+)*\.string\(\)/);
+    assert.match(slice, /expiresInDays:\s*\w+(?:\.\w+)*\.number\(\)/);
+    assert.doesNotMatch(slice, /tokenName/);
+});
+
+test('hosts_create uses tags and internalSquads', () => {
+    const slice = toolSlice('hosts_create', 4000);
+    assert.match(slice, /tags:\s*\w+(?:\.\w+)*\.array\(\w+(?:\.\w+)*\.string\(\)\)/);
+    assert.match(slice, /internalSquads:/);
+    assert.doesNotMatch(slice, /excludedInternalSquads/);
+});

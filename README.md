@@ -12,12 +12,14 @@ MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing
 
 **Version:** 1.6.0 | **Remnawave panel:** 3.4.x | **Contract:** `@remnawave/backend-contract` 3.4.15
 
+Requires Remnawave panel 3.4. Users are identified by numeric `userId` (not UUID). IP Control tools are replaced by `connections_*`. Keep 1.5.0 for panel 2.8.
+
 ### Features
 
 - **208 tools** — full management of users, nodes, hosts, subscriptions, squads, HWID, config profiles, inbounds, API tokens, billing, snippets, external squads, settings, subscription templates, subscription settings, subscription page configs, node plugins, shared lists, node integrations, node SSH, connections, bandwidth stats, and metadata
-- **3 resources** — real-time panel stats, node status, health checks
+- **4 resources** — real-time panel stats, node status, health checks, and per-user details
 - **6 prompts** — guided workflows for common tasks
-- **Readonly mode** — restrict to 97 read-only tools for safe monitoring
+- **Readonly mode** — restrict to 96 read-only tools for safe monitoring
 - **Caddy support** — `X-Api-Key` header for panels behind Caddy with custom path
 - **Type-safe** — built on [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) for API route validation
 - **stdio transport** — works with Cursor, Codex, OpenCode, Claude Desktop, Windsurf, and any MCP-compatible client
@@ -150,7 +152,7 @@ Set `REMNAWAVE_READONLY=true` to disable all write operations (create, update, d
 
 Useful for monitoring dashboards or shared environments where you want to prevent accidental changes.
 
-In readonly mode, the available tools are reduced from 208 to 97:
+In readonly mode, the available tools are reduced from 208 to 96:
 
 | Category | Available tools |
 |----------|----------------|
@@ -162,7 +164,7 @@ In readonly mode, the available tools are reduced from 208 to 97:
 | Config Profiles & Inbounds (6) | `config_profiles_list`, `config_profiles_get`, `inbounds_list`, `config_profiles_get_inbounds`, `config_profiles_tags_list`, `config_profiles_get_computed_config` |
 | Internal Squads (4) | `squads_list`, `squads_get`, `squads_tags_list`, `squads_accessible_nodes` |
 | HWID (4) | `hwid_devices_list`, `hwid_devices_list_all`, `hwid_stats`, `hwid_top_users` |
-| API Tokens (3) | `api_tokens_list`, `api_tokens_scopes`, `api_tokens_ott` |
+| API Tokens (2) | `api_tokens_list`, `api_tokens_scopes` |
 | Keygen (1) | `keygen_get` |
 | Infra Billing (4) | `billing_providers_list`, `billing_provider_get`, `billing_nodes_list`, `billing_history_list` |
 | Snippets (1) | `snippets_list` |
@@ -352,7 +354,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 |------|-------------|------|
 | `api_tokens_list` | List API tokens | read |
 | `api_tokens_scopes` | List available API token scopes | read |
-| `api_tokens_ott` | Get a one-time API token | read |
+| `api_tokens_ott` | Create a short-lived backend-tools token | write |
 | `api_tokens_create` | Create API token | write |
 | `api_tokens_delete` | Delete API token | write |
 
@@ -611,12 +613,14 @@ MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), п
 
 **Версия:** 1.6.0 | **Панель Remnawave:** 3.4.x | **Контракт:** `@remnawave/backend-contract` 3.4.15
 
+Нужна панель Remnawave 3.4. Пользователи идентифицируются числовым `userId` (не UUID). IP Control заменён на `connections_*`. Для панели 2.8 оставайтесь на 1.5.0.
+
 ### Возможности
 
 - **208 инструментов** — полное управление пользователями, нодами, хостами, подписками, группами, HWID, конфиг-профилями, inbounds, API-токенами, биллингом, сниппетами, внешними группами, настройками, шаблонами подписок, настройками подписок, страницами подписок, плагинами нод, shared lists, интеграциями нод, SSH нод, соединениями, статистикой bandwidth и метаданными
-- **3 ресурса** — статистика панели, статус нод, проверка здоровья в реальном времени
+- **4 ресурса** — статистика панели, статус нод, проверка здоровья и данные пользователя
 - **6 промптов** — пошаговые сценарии для типичных задач
-- **Readonly-режим** — ограничение до 97 инструментов только для чтения
+- **Readonly-режим** — ограничение до 96 инструментов только для чтения
 - **Поддержка Caddy** — заголовок `X-Api-Key` для панелей за Caddy с кастомным путём
 - **Type-safe** — построен на [@remnawave/backend-contract](https://www.npmjs.com/package/@remnawave/backend-contract) для валидации API-маршрутов
 - **stdio транспорт** — работает с Cursor, Codex, OpenCode, Claude Desktop, Windsurf и любым MCP-совместимым клиентом
@@ -749,7 +753,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 
 Полезно для мониторинговых дашбордов или общих окружений, где нужно исключить случайные изменения.
 
-В readonly-режиме количество доступных инструментов сокращается с 208 до 97:
+В readonly-режиме количество доступных инструментов сокращается с 208 до 96:
 
 | Категория | Доступные инструменты |
 |-----------|----------------------|
@@ -761,7 +765,7 @@ REMNAWAVE_API_KEY=ваш-caddy-api-ключ
 | Конфиг-профили и Inbounds (6) | `config_profiles_list`, `config_profiles_get`, `inbounds_list`, `config_profiles_get_inbounds`, `config_profiles_tags_list`, `config_profiles_get_computed_config` |
 | Внутренние группы (4) | `squads_list`, `squads_get`, `squads_tags_list`, `squads_accessible_nodes` |
 | HWID (4) | `hwid_devices_list`, `hwid_devices_list_all`, `hwid_stats`, `hwid_top_users` |
-| API-токены (3) | `api_tokens_list`, `api_tokens_scopes`, `api_tokens_ott` |
+| API-токены (2) | `api_tokens_list`, `api_tokens_scopes` |
 | Keygen (1) | `keygen_get` |
 | Биллинг (4) | `billing_providers_list`, `billing_provider_get`, `billing_nodes_list`, `billing_history_list` |
 | Сниппеты (1) | `snippets_list` |
@@ -951,7 +955,7 @@ npm run build
 |------------|----------|-------|
 | `api_tokens_list` | Список API-токенов | read |
 | `api_tokens_scopes` | Список доступных scope API-токенов | read |
-| `api_tokens_ott` | Получить одноразовый API-токен | read |
+| `api_tokens_ott` | Создать короткоживущий токен backend-tools | write |
 | `api_tokens_create` | Создать API-токен | write |
 | `api_tokens_delete` | Удалить API-токен | write |
 

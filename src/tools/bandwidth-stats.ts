@@ -11,8 +11,8 @@ export function registerBandwidthStatsTools(
         'bandwidth_nodes',
         'Get bandwidth usage stats across nodes for a date range',
         {
-            start: z.string().describe('Start datetime (ISO 8601)'),
-            end: z.string().describe('End datetime (ISO 8601)'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
             topNodesLimit: z
                 .number()
                 .optional()
@@ -45,8 +45,8 @@ export function registerBandwidthStatsTools(
         'Get bandwidth usage by users on a specific node for a date range',
         {
             uuid: z.string().describe('Node UUID'),
-            start: z.string().describe('Start datetime (ISO 8601)'),
-            end: z.string().describe('End datetime (ISO 8601)'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
             topUsersLimit: z
                 .number()
                 .optional()
@@ -72,8 +72,8 @@ export function registerBandwidthStatsTools(
         'Get bandwidth usage by users across selected nodes for a date range',
         {
             nodesUuids: z.array(z.string()).describe('Array of node UUIDs'),
-            start: z.string().describe('Start datetime (ISO 8601)'),
-            end: z.string().describe('End datetime (ISO 8601)'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
             topUsersLimit: z
                 .number()
                 .optional()
@@ -93,8 +93,8 @@ export function registerBandwidthStatsTools(
         'Get bandwidth usage for a specific user for a date range',
         {
             userId: z.number().describe('User numeric ID'),
-            start: z.string().describe('Start datetime (ISO 8601)'),
-            end: z.string().describe('End datetime (ISO 8601)'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
             topNodesLimit: z
                 .number()
                 .optional()

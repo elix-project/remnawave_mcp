@@ -58421,7 +58421,7 @@ var RemnawaveClient = class {
     return this.get(import_backend_contract.REST_API.API_TOKENS.GET_SCOPES);
   }
   async getApiTokenOtt() {
-    return this.get(import_backend_contract.REST_API.API_TOKENS.OTT);
+    return this.post(import_backend_contract.REST_API.API_TOKENS.OTT);
   }
   async createApiToken(params) {
     return this.post(import_backend_contract.REST_API.API_TOKENS.CREATE, params);
@@ -58513,7 +58513,7 @@ var RemnawaveClient = class {
     return this.patch(import_backend_contract.REST_API.SNIPPETS.UPDATE, params);
   }
   async deleteSnippet(params) {
-    return this.post(import_backend_contract.REST_API.SNIPPETS.DELETE, params);
+    return this.delete(import_backend_contract.REST_API.SNIPPETS.DELETE, params);
   }
   async syncSnippet(params) {
     return this.post(import_backend_contract.REST_API.SNIPPETS.ACTIONS.SYNC, params);
@@ -58697,14 +58697,14 @@ var RemnawaveClient = class {
   async getNodeMetadata(uuid2) {
     return this.get(import_backend_contract.REST_API.METADATA.NODE.GET(uuid2));
   }
-  async upsertNodeMetadata(uuid2, params) {
-    return this.put(import_backend_contract.REST_API.METADATA.NODE.UPSERT(uuid2), params);
+  async upsertNodeMetadata(uuid2, metadata) {
+    return this.put(import_backend_contract.REST_API.METADATA.NODE.UPSERT(uuid2), { metadata });
   }
   async getUserMetadata(userId) {
     return this.get(import_backend_contract.REST_API.METADATA.USER.GET(String(userId)));
   }
-  async upsertUserMetadata(userId, params) {
-    return this.put(import_backend_contract.REST_API.METADATA.USER.UPSERT(String(userId)), params);
+  async upsertUserMetadata(userId, metadata) {
+    return this.put(import_backend_contract.REST_API.METADATA.USER.UPSERT(String(userId)), { metadata });
   }
 };
 
@@ -59550,12 +59550,15 @@ function registerHostTools(server, client, readonly2) {
       isDisabled: external_exports.boolean().optional().describe("Create in disabled state"),
       isHidden: external_exports.boolean().optional().describe("Hide from subscription list"),
       securityLayer: external_exports.enum(["DEFAULT", "TLS", "NONE"]).optional().describe("Security layer"),
-      tag: external_exports.string().optional().describe("Host tag"),
+      tags: external_exports.array(external_exports.string()).optional().describe("Host tags"),
       serverDescription: external_exports.string().optional().describe("Server description"),
       nodes: external_exports.array(external_exports.string()).optional().describe("Array of node UUIDs to assign"),
       excludeFromSubscriptionTypes: external_exports.array(external_exports.enum(SUBSCRIPTION_TYPES)).optional().describe("Subscription types to exclude this host from"),
       xrayJsonTemplateUuid: external_exports.string().optional().describe("Xray JSON template UUID"),
-      excludedInternalSquads: external_exports.array(external_exports.string()).optional().describe("Internal squad UUIDs to exclude host from"),
+      internalSquads: external_exports.object({
+        mode: external_exports.enum(["EXCLUDE", "ALLOW_ONLY"]).describe("Squad filter mode"),
+        squads: external_exports.array(external_exports.string()).describe("Internal squad UUIDs")
+      }).optional().describe("Internal squad visibility filter"),
       overrideSniFromAddress: external_exports.boolean().optional().describe("Override SNI from address"),
       keepSniBlank: external_exports.boolean().optional().describe("Keep SNI field blank"),
       allowInsecure: external_exports.boolean().optional().describe("Allow insecure connections"),
@@ -59586,7 +59589,7 @@ function registerHostTools(server, client, readonly2) {
           body.isHidden = params.isHidden;
         if (params.securityLayer !== void 0)
           body.securityLayer = params.securityLayer;
-        if (params.tag !== void 0) body.tag = params.tag;
+        if (params.tags !== void 0) body.tags = params.tags;
         if (params.serverDescription !== void 0)
           body.serverDescription = params.serverDescription;
         if (params.nodes !== void 0) body.nodes = params.nodes;
@@ -59594,8 +59597,8 @@ function registerHostTools(server, client, readonly2) {
           body.excludeFromSubscriptionTypes = params.excludeFromSubscriptionTypes;
         if (params.xrayJsonTemplateUuid !== void 0)
           body.xrayJsonTemplateUuid = params.xrayJsonTemplateUuid;
-        if (params.excludedInternalSquads !== void 0)
-          body.excludedInternalSquads = params.excludedInternalSquads;
+        if (params.internalSquads !== void 0)
+          body.internalSquads = params.internalSquads;
         if (params.overrideSniFromAddress !== void 0)
           body.overrideSniFromAddress = params.overrideSniFromAddress;
         if (params.keepSniBlank !== void 0)
@@ -59643,12 +59646,15 @@ function registerHostTools(server, client, readonly2) {
       isDisabled: external_exports.boolean().optional().describe("Enable/disable host"),
       isHidden: external_exports.boolean().optional().describe("Hide from subscription list"),
       securityLayer: external_exports.enum(["DEFAULT", "TLS", "NONE"]).optional().describe("New security layer"),
-      tag: external_exports.string().optional().describe("New tag"),
+      tags: external_exports.array(external_exports.string()).optional().describe("New tags"),
       serverDescription: external_exports.string().optional().describe("New server description"),
       nodes: external_exports.array(external_exports.string()).optional().describe("New node UUIDs"),
       excludeFromSubscriptionTypes: external_exports.array(external_exports.enum(SUBSCRIPTION_TYPES)).optional().describe("Subscription types to exclude this host from"),
       xrayJsonTemplateUuid: external_exports.string().optional().describe("Xray JSON template UUID"),
-      excludedInternalSquads: external_exports.array(external_exports.string()).optional().describe("Internal squad UUIDs to exclude host from"),
+      internalSquads: external_exports.object({
+        mode: external_exports.enum(["EXCLUDE", "ALLOW_ONLY"]).describe("Squad filter mode"),
+        squads: external_exports.array(external_exports.string()).describe("Internal squad UUIDs")
+      }).optional().describe("Internal squad visibility filter"),
       overrideSniFromAddress: external_exports.boolean().optional().describe("Override SNI from address"),
       keepSniBlank: external_exports.boolean().optional().describe("Keep SNI field blank"),
       allowInsecure: external_exports.boolean().optional().describe("Allow insecure connections"),
@@ -59781,7 +59787,10 @@ function registerHostTools(server, client, readonly2) {
       isHidden: external_exports.boolean().optional().describe("Hide host"),
       securityLayer: external_exports.enum(["DEFAULT", "TLS", "NONE"]).optional().describe("Security layer"),
       excludeFromSubscriptionTypes: external_exports.array(external_exports.enum(SUBSCRIPTION_TYPES)).optional().describe("Subscription types to exclude from"),
-      excludedInternalSquads: external_exports.array(external_exports.string()).optional().describe("Internal squad UUIDs to exclude")
+      internalSquads: external_exports.object({
+        mode: external_exports.enum(["EXCLUDE", "ALLOW_ONLY"]).describe("Squad filter mode"),
+        squads: external_exports.array(external_exports.string()).describe("Internal squad UUIDs")
+      }).optional().describe("Internal squad visibility filter")
     },
     async (params) => {
       try {
@@ -60625,16 +60634,18 @@ function registerApiTokenTools(server, client, readonly2) {
       return toolError(e);
     }
   });
-  server.tool("api_tokens_ott", "Get a one-time API token (OTT)", {}, async () => {
+  if (readonly2) return;
+  server.tool("api_tokens_ott", "Create a short-lived one-time token for backend tools (Swagger, Scalar, Bull Board)", {}, async () => {
     try {
       return toolResult(await client.getApiTokenOtt());
     } catch (e) {
       return toolError(e);
     }
   });
-  if (readonly2) return;
   server.tool("api_tokens_create", "Create a new API token", {
-    tokenName: external_exports.string().describe("Token name")
+    name: external_exports.string().describe("Token name"),
+    expiresInDays: external_exports.number().describe("Number of days until the token expires"),
+    scopes: external_exports.array(external_exports.string()).optional().describe('Token scopes (default ["*"])')
   }, async (params) => {
     try {
       return toolResult(await client.createApiToken(params));
@@ -61562,8 +61573,8 @@ function registerBandwidthStatsTools(server, client) {
     "bandwidth_nodes",
     "Get bandwidth usage stats across nodes for a date range",
     {
-      start: external_exports.string().describe("Start datetime (ISO 8601)"),
-      end: external_exports.string().describe("End datetime (ISO 8601)"),
+      start: external_exports.string().describe("Start date (YYYY-MM-DD)"),
+      end: external_exports.string().describe("End date (YYYY-MM-DD)"),
       topNodesLimit: external_exports.number().optional().describe("Max number of top nodes to return")
     },
     async (params) => {
@@ -61591,8 +61602,8 @@ function registerBandwidthStatsTools(server, client) {
     "Get bandwidth usage by users on a specific node for a date range",
     {
       uuid: external_exports.string().describe("Node UUID"),
-      start: external_exports.string().describe("Start datetime (ISO 8601)"),
-      end: external_exports.string().describe("End datetime (ISO 8601)"),
+      start: external_exports.string().describe("Start date (YYYY-MM-DD)"),
+      end: external_exports.string().describe("End date (YYYY-MM-DD)"),
       topUsersLimit: external_exports.number().optional().describe("Max number of top users to return")
     },
     async ({ uuid: uuid2, start, end, topUsersLimit }) => {
@@ -61614,8 +61625,8 @@ function registerBandwidthStatsTools(server, client) {
     "Get bandwidth usage by users across selected nodes for a date range",
     {
       nodesUuids: external_exports.array(external_exports.string()).describe("Array of node UUIDs"),
-      start: external_exports.string().describe("Start datetime (ISO 8601)"),
-      end: external_exports.string().describe("End datetime (ISO 8601)"),
+      start: external_exports.string().describe("Start date (YYYY-MM-DD)"),
+      end: external_exports.string().describe("End date (YYYY-MM-DD)"),
       topUsersLimit: external_exports.number().optional().describe("Max number of top users to return")
     },
     async (params) => {
@@ -61631,8 +61642,8 @@ function registerBandwidthStatsTools(server, client) {
     "Get bandwidth usage for a specific user for a date range",
     {
       userId: external_exports.number().describe("User numeric ID"),
-      start: external_exports.string().describe("Start datetime (ISO 8601)"),
-      end: external_exports.string().describe("End datetime (ISO 8601)"),
+      start: external_exports.string().describe("Start date (YYYY-MM-DD)"),
+      end: external_exports.string().describe("End date (YYYY-MM-DD)"),
       topNodesLimit: external_exports.number().optional().describe("Max number of top nodes to return")
     },
     async ({ userId, start, end, topNodesLimit }) => {
@@ -61997,7 +62008,7 @@ function registerAllPrompts(server) {
     "user_audit",
     "Complete audit of a specific user",
     {
-      userId: external_exports.string().describe("User numeric ID to audit")
+      userId: external_exports.number().describe("User numeric ID to audit")
     },
     async ({ userId }) => ({
       messages: [

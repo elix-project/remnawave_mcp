@@ -99,7 +99,7 @@ export function registerAllPrompts(server: McpServer) {
         'user_audit',
         'Complete audit of a specific user',
         {
-            userId: z.string().describe('User numeric ID to audit'),
+            userId: z.number().describe('User numeric ID to audit'),
         },
         async ({ userId }) => ({
             messages: [
