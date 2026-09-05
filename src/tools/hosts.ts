@@ -98,7 +98,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .enum(['DEFAULT', 'TLS', 'NONE'])
                 .optional()
                 .describe('Security layer'),
-            tag: z.string().optional().describe('Host tag'),
+            tags: z.array(z.string()).optional().describe('Host tags'),
             serverDescription: z
                 .string()
                 .optional()
@@ -115,10 +115,13 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .string()
                 .optional()
                 .describe('Xray JSON template UUID'),
-            excludedInternalSquads: z
-                .array(z.string())
+            internalSquads: z
+                .object({
+                    mode: z.enum(['EXCLUDE', 'ALLOW_ONLY']).describe('Squad filter mode'),
+                    squads: z.array(z.string()).describe('Internal squad UUIDs'),
+                })
                 .optional()
-                .describe('Internal squad UUIDs to exclude host from'),
+                .describe('Internal squad visibility filter'),
             overrideSniFromAddress: z
                 .boolean()
                 .optional()
@@ -168,7 +171,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                     body.isHidden = params.isHidden;
                 if (params.securityLayer !== undefined)
                     body.securityLayer = params.securityLayer;
-                if (params.tag !== undefined) body.tag = params.tag;
+                if (params.tags !== undefined) body.tags = params.tags;
                 if (params.serverDescription !== undefined)
                     body.serverDescription = params.serverDescription;
                 if (params.nodes !== undefined) body.nodes = params.nodes;
@@ -176,8 +179,8 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                     body.excludeFromSubscriptionTypes = params.excludeFromSubscriptionTypes;
                 if (params.xrayJsonTemplateUuid !== undefined)
                     body.xrayJsonTemplateUuid = params.xrayJsonTemplateUuid;
-                if (params.excludedInternalSquads !== undefined)
-                    body.excludedInternalSquads = params.excludedInternalSquads;
+                if (params.internalSquads !== undefined)
+                    body.internalSquads = params.internalSquads;
                 if (params.overrideSniFromAddress !== undefined)
                     body.overrideSniFromAddress = params.overrideSniFromAddress;
                 if (params.keepSniBlank !== undefined)
@@ -242,7 +245,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .enum(['DEFAULT', 'TLS', 'NONE'])
                 .optional()
                 .describe('New security layer'),
-            tag: z.string().optional().describe('New tag'),
+            tags: z.array(z.string()).optional().describe('New tags'),
             serverDescription: z
                 .string()
                 .optional()
@@ -259,10 +262,13 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .string()
                 .optional()
                 .describe('Xray JSON template UUID'),
-            excludedInternalSquads: z
-                .array(z.string())
+            internalSquads: z
+                .object({
+                    mode: z.enum(['EXCLUDE', 'ALLOW_ONLY']).describe('Squad filter mode'),
+                    squads: z.array(z.string()).describe('Internal squad UUIDs'),
+                })
                 .optional()
-                .describe('Internal squad UUIDs to exclude host from'),
+                .describe('Internal squad visibility filter'),
             overrideSniFromAddress: z
                 .boolean()
                 .optional()
@@ -348,6 +354,21 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
     );
 
     server.tool(
+        'hosts_clone',
+        'Clone an existing host',
+        {
+            cloneFromUuid: z.string().describe('Host UUID to clone'),
+        },
+        async (params) => {
+            try {
+                return toolResult(await client.cloneHost(params));
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
         'hosts_bulk_enable',
         'Bulk enable selected hosts',
         { uuids: z.array(z.string()).describe('Array of host UUIDs') },
@@ -404,10 +425,13 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
                 .array(z.enum(SUBSCRIPTION_TYPES))
                 .optional()
                 .describe('Subscription types to exclude from'),
-            excludedInternalSquads: z
-                .array(z.string())
+            internalSquads: z
+                .object({
+                    mode: z.enum(['EXCLUDE', 'ALLOW_ONLY']).describe('Squad filter mode'),
+                    squads: z.array(z.string()).describe('Internal squad UUIDs'),
+                })
                 .optional()
-                .describe('Internal squad UUIDs to exclude'),
+                .describe('Internal squad visibility filter'),
         },
         async (params) => {
             try { return toolResult(await client.bulkUpdateHosts(params)); } catch (e) { return toolError(e); }

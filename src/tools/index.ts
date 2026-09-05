@@ -16,11 +16,13 @@ import { registerExternalSquadTools } from './external-squads.js';
 import { registerSettingsTools } from './settings.js';
 import { registerSubPageConfigTools } from './subscription-page-configs.js';
 import { registerNodePluginTools } from './node-plugins.js';
-import { registerIpControlTools } from './ip-control.js';
+import { registerConnectionTools } from './connections.js';
 import { registerMetadataTools } from './metadata.js';
 import { registerSubscriptionTemplateTools } from './subscription-templates.js';
 import { registerSubscriptionSettingsTools } from './subscription-settings.js';
 import { registerBandwidthStatsTools } from './bandwidth-stats.js';
+import { registerNodeIntegrationTools } from './node-integrations.js';
+import { registerNodeSshTools } from './node-ssh.js';
 
 export function registerAllTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
     registerUserTools(server, client, readonly);
@@ -39,9 +41,11 @@ export function registerAllTools(server: McpServer, client: RemnawaveClient, rea
     registerSettingsTools(server, client, readonly);
     registerSubPageConfigTools(server, client, readonly);
     registerNodePluginTools(server, client, readonly);
-    registerIpControlTools(server, client, readonly);
+    registerConnectionTools(server, client, readonly);
     registerMetadataTools(server, client, readonly);
     registerSubscriptionTemplateTools(server, client, readonly);
     registerSubscriptionSettingsTools(server, client, readonly);
     registerBandwidthStatsTools(server, client);
+    registerNodeIntegrationTools(server, client, readonly);
+    registerNodeSshTools(server, client, readonly);
 }

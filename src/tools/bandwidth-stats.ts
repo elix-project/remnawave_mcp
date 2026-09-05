@@ -11,8 +11,8 @@ export function registerBandwidthStatsTools(
         'bandwidth_nodes',
         'Get bandwidth usage stats across nodes for a date range',
         {
-            start: z.string().describe('Start datetime (ISO 8601)'),
-            end: z.string().describe('End datetime (ISO 8601)'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
             topNodesLimit: z
                 .number()
                 .optional()
@@ -45,8 +45,8 @@ export function registerBandwidthStatsTools(
         'Get bandwidth usage by users on a specific node for a date range',
         {
             uuid: z.string().describe('Node UUID'),
-            start: z.string().describe('Start datetime (ISO 8601)'),
-            end: z.string().describe('End datetime (ISO 8601)'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
             topUsersLimit: z
                 .number()
                 .optional()
@@ -72,8 +72,8 @@ export function registerBandwidthStatsTools(
         'Get bandwidth usage by users across selected nodes for a date range',
         {
             nodesUuids: z.array(z.string()).describe('Array of node UUIDs'),
-            start: z.string().describe('Start datetime (ISO 8601)'),
-            end: z.string().describe('End datetime (ISO 8601)'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
             topUsersLimit: z
                 .number()
                 .optional()
@@ -92,21 +92,96 @@ export function registerBandwidthStatsTools(
         'bandwidth_user',
         'Get bandwidth usage for a specific user for a date range',
         {
-            uuid: z.string().describe('User UUID'),
-            start: z.string().describe('Start datetime (ISO 8601)'),
-            end: z.string().describe('End datetime (ISO 8601)'),
+            userId: z.number().describe('User numeric ID'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
             topNodesLimit: z
                 .number()
                 .optional()
                 .describe('Max number of top nodes to return'),
         },
-        async ({ uuid, start, end, topNodesLimit }) => {
+        async ({ userId, start, end, topNodesLimit }) => {
             try {
                 return toolResult(
-                    await client.getUserBandwidthByUuid(uuid, {
+                    await client.getUserBandwidthById(userId, {
                         start,
                         end,
                         topNodesLimit,
+                    }),
+                );
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'bandwidth_nodes_usage',
+        'Get users exceeding a traffic threshold on selected nodes for a date range',
+        {
+            nodesUuids: z.array(z.string()).describe('Array of node UUIDs'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
+            minTotalBytes: z
+                .number()
+                .optional()
+                .describe('Minimum total bytes threshold'),
+        },
+        async (params) => {
+            try {
+                return toolResult(await client.getNodesUsage(params));
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'bandwidth_squad_usage',
+        'Get per-user bandwidth usage for an internal squad',
+        {
+            uuid: z.string().describe('Internal squad UUID'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
+            minTotalBytes: z
+                .number()
+                .optional()
+                .describe('Minimum total bytes threshold'),
+            limit: z.number().optional().describe('Page size'),
+            cursor: z.number().optional().describe('Pagination cursor'),
+        },
+        async ({ uuid, start, end, minTotalBytes, limit, cursor }) => {
+            try {
+                return toolResult(
+                    await client.getInternalSquadUsage(uuid, {
+                        start,
+                        end,
+                        minTotalBytes,
+                        limit,
+                        cursor,
+                    }),
+                );
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'bandwidth_squad_user_usage',
+        'Get per-node daily bandwidth usage for a user inside an internal squad',
+        {
+            squadUuid: z.string().describe('Internal squad UUID'),
+            userId: z.number().describe('User numeric ID'),
+            start: z.string().describe('Start date (YYYY-MM-DD)'),
+            end: z.string().describe('End date (YYYY-MM-DD)'),
+        },
+        async ({ squadUuid, userId, start, end }) => {
+            try {
+                return toolResult(
+                    await client.getInternalSquadUserUsage(squadUuid, userId, {
+                        start,
+                        end,
                     }),
                 );
             } catch (e) {

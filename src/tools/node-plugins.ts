@@ -22,6 +22,20 @@ export function registerNodePluginTools(server: McpServer, client: RemnawaveClie
         try { return toolResult(await client.getTorrentBlockerStats()); } catch (e) { return toolError(e); }
     });
 
+    server.tool('node_plugins_tags_list', 'List all node plugin tags', {}, async () => {
+        try { return toolResult(await client.getNodePluginTags()); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('shared_lists_list', 'List shared lists (name, type, item count)', {}, async () => {
+        try { return toolResult(await client.getSharedLists()); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('shared_lists_get', 'Get a shared list by name', {
+        name: z.string().describe('Shared list name'),
+    }, async ({ name }) => {
+        try { return toolResult(await client.getSharedList(name)); } catch (e) { return toolError(e); }
+    });
+
     if (readonly) return;
 
     server.tool('node_plugins_create', 'Create a new node plugin', {
@@ -51,6 +65,45 @@ export function registerNodePluginTools(server: McpServer, client: RemnawaveClie
         })).describe('Ordered array of { viewPosition, uuid } objects'),
     }, async (params) => {
         try { return toolResult(await client.reorderNodePlugins(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('node_plugins_sync', 'Sync a node plugin config (including shared lists) to connected nodes', {
+        uuid: z.string().describe('Plugin UUID'),
+    }, async (params) => {
+        try { return toolResult(await client.syncNodePlugin(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('node_plugins_tags_set', 'Set tags for a node plugin', {
+        uuid: z.string().describe('Plugin UUID'),
+        tags: z.array(z.string()).describe('Tags to assign'),
+    }, async (params) => {
+        try { return toolResult(await client.setNodePluginTags(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('shared_lists_create', 'Create a shared list', {
+        name: z.string().describe('Shared list name'),
+        config: z.record(z.unknown()).describe('Shared list configuration object'),
+    }, async (params) => {
+        try { return toolResult(await client.createSharedList(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('shared_lists_update', 'Update a shared list config. Get the current object with shared_lists_get, then pass the full `config` to replace it.', {
+        name: z.string().describe('Shared list name'),
+        config: z.record(z.unknown()).describe('Shared list configuration object. Replaces the entire config.'),
+    }, async (params) => {
+        try { return toolResult(await client.updateSharedList(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('shared_lists_delete', 'Delete a shared list by name', {
+        name: z.string().describe('Shared list name'),
+    }, async (params) => {
+        try { return toolResult(await client.deleteSharedList(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('shared_lists_sync', 'Sync a shared list to nodes via every plugin that references it', {
+        name: z.string().describe('Shared list name'),
+    }, async (params) => {
+        try { return toolResult(await client.syncSharedList(params)); } catch (e) { return toolError(e); }
     });
 
     server.tool('node_plugins_clone', 'Clone a node plugin', {

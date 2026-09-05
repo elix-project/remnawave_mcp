@@ -14,8 +14,14 @@ export function registerApiTokenTools(server: McpServer, client: RemnawaveClient
 
     if (readonly) return;
 
+    server.tool('api_tokens_ott', 'Create a short-lived one-time token for backend tools (Swagger, Scalar, Bull Board)', {}, async () => {
+        try { return toolResult(await client.getApiTokenOtt()); } catch (e) { return toolError(e); }
+    });
+
     server.tool('api_tokens_create', 'Create a new API token', {
-        tokenName: z.string().describe('Token name'),
+        name: z.string().describe('Token name'),
+        expiresInDays: z.number().describe('Number of days until the token expires'),
+        scopes: z.array(z.string()).optional().describe('Token scopes (default ["*"])'),
     }, async (params) => {
         try { return toolResult(await client.createApiToken(params)); } catch (e) { return toolError(e); }
     });

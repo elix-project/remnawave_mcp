@@ -45,6 +45,19 @@ export function registerSubscriptionTemplateTools(
         },
     );
 
+    server.tool(
+        'subscription_templates_tags_list',
+        'List all subscription template tags',
+        {},
+        async () => {
+            try {
+                return toolResult(await client.getSubscriptionTemplateTags());
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
     if (readonly) return;
 
     server.tool(
@@ -100,6 +113,22 @@ export function registerSubscriptionTemplateTools(
                     success: true,
                     message: `Subscription template ${uuid} deleted`,
                 });
+            } catch (e) {
+                return toolError(e);
+            }
+        },
+    );
+
+    server.tool(
+        'subscription_templates_tags_set',
+        'Set tags for a subscription template',
+        {
+            uuid: z.string().describe('Template UUID'),
+            tags: z.array(z.string()).describe('Tags to assign'),
+        },
+        async (params) => {
+            try {
+                return toolResult(await client.setSubscriptionTemplateTags(params));
             } catch (e) {
                 return toolError(e);
             }

@@ -14,6 +14,10 @@ export function registerSubPageConfigTools(server: McpServer, client: RemnawaveC
         try { return toolResult(await client.getSubscriptionPageConfig(uuid)); } catch (e) { return toolError(e); }
     });
 
+    server.tool('sub_page_configs_tags_list', 'List all subscription page config tags', {}, async () => {
+        try { return toolResult(await client.getSubscriptionPageConfigTags()); } catch (e) { return toolError(e); }
+    });
+
     if (readonly) return;
 
     server.tool('sub_page_configs_create', 'Create a subscription page configuration', {
@@ -43,6 +47,13 @@ export function registerSubPageConfigTools(server: McpServer, client: RemnawaveC
         })).describe('Ordered array of { viewPosition, uuid } objects'),
     }, async (params) => {
         try { return toolResult(await client.reorderSubscriptionPageConfigs(params)); } catch (e) { return toolError(e); }
+    });
+
+    server.tool('sub_page_configs_tags_set', 'Set tags for a subscription page configuration', {
+        uuid: z.string().describe('Config UUID'),
+        tags: z.array(z.string()).describe('Tags to assign'),
+    }, async (params) => {
+        try { return toolResult(await client.setSubscriptionPageConfigTags(params)); } catch (e) { return toolError(e); }
     });
 
     server.tool('sub_page_configs_clone', 'Clone a subscription page configuration', {
