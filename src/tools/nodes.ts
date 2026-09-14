@@ -1,7 +1,36 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { RemnawaveClient } from '../client/index.js';
-import { toolResult, toolError } from './helpers.js';
+import { compactBody, toolResult, toolError } from './helpers.js';
+
+const nodeConfigProfileSchema = z
+    .object({
+        activeConfigProfileUuid: z.string().describe('Config profile UUID'),
+        activeInbounds: z
+            .array(z.string())
+            .describe('Inbound UUIDs to enable on the node'),
+    })
+    .describe(
+        'Nested API object { activeConfigProfileUuid, activeInbounds }. Do not flatten these fields to the top level.',
+    );
+
+const nodeIpSchema = z.object({
+    ip: z.string().describe('IPv4 or IPv6 address'),
+    status: z
+        .enum([
+            'INBOUND',
+            'OUTBOUND',
+            'MANAGEMENT',
+            'TRANSIT',
+            'MONITORING',
+            'RESERVE',
+            'BLOCKED',
+            'FLAGGED',
+            'DEPRECATED',
+            'UNKNOWN',
+        ])
+        .describe('IP role/status'),
+});
 
 export function registerNodeTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
     server.tool(
@@ -81,40 +110,28 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
                 .number()
                 .optional()
                 .describe('Traffic consumption multiplier'),
-            activeConfigProfileUuid: z
+            nodeConsumptionMultiplier: z
+                .number()
+                .optional()
+                .describe('Per-node traffic consumption multiplier'),
+            proxyUrl: z
                 .string()
-                .describe('Config profile UUID to assign'),
-            activeInbounds: z
+                .optional()
+                .describe('SOCKS5 proxy URL (socks5://[user:pass@]host:port)'),
+            configProfile: nodeConfigProfileSchema,
+            providerUuid: z.string().optional().describe('Infra provider UUID'),
+            tags: z.array(z.string()).optional().describe('Node tags'),
+            activePluginUuid: z.string().optional().describe('Active plugin UUID'),
+            integrationUuids: z
                 .array(z.string())
-                .describe('Array of inbound UUIDs to enable'),
+                .optional()
+                .describe('Node integration UUIDs'),
+            note: z.string().optional().describe('Node note'),
+            ips: z.array(nodeIpSchema).optional().describe('Node IP list'),
         },
         async (params) => {
             try {
-                const body: Record<string, unknown> = {
-                    name: params.name,
-                    address: params.address,
-                    configProfile: {
-                        activeConfigProfileUuid:
-                            params.activeConfigProfileUuid,
-                        activeInbounds: params.activeInbounds,
-                    },
-                };
-                if (params.port !== undefined) body.port = params.port;
-                if (params.countryCode !== undefined)
-                    body.countryCode = params.countryCode;
-                if (params.isTrafficTrackingActive !== undefined)
-                    body.isTrafficTrackingActive =
-                        params.isTrafficTrackingActive;
-                if (params.trafficLimitBytes !== undefined)
-                    body.trafficLimitBytes = params.trafficLimitBytes;
-                if (params.trafficResetDay !== undefined)
-                    body.trafficResetDay = params.trafficResetDay;
-                if (params.notifyPercent !== undefined)
-                    body.notifyPercent = params.notifyPercent;
-                if (params.consumptionMultiplier !== undefined)
-                    body.consumptionMultiplier = params.consumptionMultiplier;
-
-                const result = await client.createNode(body);
+                const result = await client.createNode(compactBody(params));
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -151,10 +168,29 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
                 .number()
                 .optional()
                 .describe('New consumption multiplier'),
+            nodeConsumptionMultiplier: z
+                .number()
+                .optional()
+                .describe('Per-node traffic consumption multiplier'),
+            proxyUrl: z
+                .string()
+                .nullable()
+                .optional()
+                .describe('SOCKS5 proxy URL (socks5://[user:pass@]host:port)'),
+            configProfile: nodeConfigProfileSchema.optional(),
+            providerUuid: z.string().optional().describe('Infra provider UUID'),
+            tags: z.array(z.string()).optional().describe('Node tags'),
+            activePluginUuid: z.string().optional().describe('Active plugin UUID'),
+            integrationUuids: z
+                .array(z.string())
+                .optional()
+                .describe('Node integration UUIDs'),
+            note: z.string().optional().describe('Node note'),
+            ips: z.array(nodeIpSchema).optional().describe('Node IP list'),
         },
         async (params) => {
             try {
-                const result = await client.updateNode(params);
+                const result = await client.updateNode(compactBody(params));
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -282,22 +318,16 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
 
     server.tool(
         'nodes_bulk_profile_modification',
-        'Bulk modify config profile for selected nodes',
+        'Bulk modify config profile for selected nodes. Body matches the Remnawave API: { uuids, configProfile: { activeConfigProfileUuid, activeInbounds } }.',
         {
             uuids: z.array(z.string()).describe('Array of node UUIDs'),
-            configProfileUuid: z.string().describe('New config profile UUID'),
-            activeInbounds: z.array(z.string()).describe('Array of inbound UUIDs to enable'),
+            configProfile: nodeConfigProfileSchema,
         },
         async (params) => {
             try {
-                const body = {
-                    uuids: params.uuids,
-                    configProfile: {
-                        activeConfigProfileUuid: params.configProfileUuid,
-                        activeInbounds: params.activeInbounds,
-                    },
-                };
-                const result = await client.bulkNodeProfileModification(body);
+                const result = await client.bulkNodeProfileModification(
+                    compactBody(params),
+                );
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -329,9 +359,18 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
             uuids: z.array(z.string()).describe('Array of node UUIDs'),
             countryCode: z.string().optional().describe('New country code'),
             consumptionMultiplier: z.number().optional().describe('New consumption multiplier'),
+            nodeConsumptionMultiplier: z
+                .number()
+                .optional()
+                .describe('Per-node traffic consumption multiplier'),
             providerUuid: z.string().optional().describe('Infra provider UUID'),
             tags: z.array(z.string()).optional().describe('Node tags'),
             activePluginUuid: z.string().optional().describe('Active plugin UUID'),
+            integrationUuids: z
+                .array(z.string())
+                .optional()
+                .describe('Node integration UUIDs'),
+            note: z.string().optional().describe('Node note'),
         },
         async (params) => {
             try {

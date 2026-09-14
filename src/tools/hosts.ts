@@ -1,9 +1,18 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { RemnawaveClient } from '../client/index.js';
-import { toolResult, toolError } from './helpers.js';
+import { compactBody, toolResult, toolError } from './helpers.js';
 
 const SUBSCRIPTION_TYPES = ['XRAY_JSON', 'XRAY_BASE64', 'MIHOMO', 'STASH', 'CLASH', 'SINGBOX'] as const;
+
+const hostInboundSchema = z
+    .object({
+        configProfileUuid: z.string().describe('Config profile UUID'),
+        configProfileInboundUuid: z.string().describe('Config profile inbound UUID'),
+    })
+    .describe(
+        'Nested API object { configProfileUuid, configProfileInboundUuid }. Do not flatten these fields to the top level.',
+    );
 
 export function registerHostTools(server: McpServer, client: RemnawaveClient, readonly: boolean) {
     server.tool(
@@ -59,12 +68,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
             remark: z.string().describe('Host remark/name'),
             address: z.string().describe('Host address'),
             port: z.number().describe('Host port'),
-            configProfileUuid: z
-                .string()
-                .describe('Config profile UUID'),
-            configProfileInboundUuid: z
-                .string()
-                .describe('Config profile inbound UUID'),
+            inbound: hostInboundSchema,
             path: z.string().optional().describe('URL path'),
             sni: z.string().optional().describe('SNI (Server Name Indication)'),
             host: z.string().optional().describe('Host header'),
@@ -149,52 +153,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
         },
         async (params) => {
             try {
-                const body: Record<string, unknown> = {
-                    remark: params.remark,
-                    address: params.address,
-                    port: params.port,
-                    inbound: {
-                        configProfileUuid: params.configProfileUuid,
-                        configProfileInboundUuid:
-                            params.configProfileInboundUuid,
-                    },
-                };
-                if (params.path !== undefined) body.path = params.path;
-                if (params.sni !== undefined) body.sni = params.sni;
-                if (params.host !== undefined) body.host = params.host;
-                if (params.alpn !== undefined) body.alpn = params.alpn;
-                if (params.fingerprint !== undefined)
-                    body.fingerprint = params.fingerprint;
-                if (params.isDisabled !== undefined)
-                    body.isDisabled = params.isDisabled;
-                if (params.isHidden !== undefined)
-                    body.isHidden = params.isHidden;
-                if (params.securityLayer !== undefined)
-                    body.securityLayer = params.securityLayer;
-                if (params.tags !== undefined) body.tags = params.tags;
-                if (params.serverDescription !== undefined)
-                    body.serverDescription = params.serverDescription;
-                if (params.nodes !== undefined) body.nodes = params.nodes;
-                if (params.excludeFromSubscriptionTypes !== undefined)
-                    body.excludeFromSubscriptionTypes = params.excludeFromSubscriptionTypes;
-                if (params.xrayJsonTemplateUuid !== undefined)
-                    body.xrayJsonTemplateUuid = params.xrayJsonTemplateUuid;
-                if (params.internalSquads !== undefined)
-                    body.internalSquads = params.internalSquads;
-                if (params.overrideSniFromAddress !== undefined)
-                    body.overrideSniFromAddress = params.overrideSniFromAddress;
-                if (params.keepSniBlank !== undefined)
-                    body.keepSniBlank = params.keepSniBlank;
-                if (params.allowInsecure !== undefined)
-                    body.allowInsecure = params.allowInsecure;
-                if (params.vlessRouteId !== undefined)
-                    body.vlessRouteId = params.vlessRouteId;
-                if (params.shuffleHost !== undefined)
-                    body.shuffleHost = params.shuffleHost;
-                if (params.mihomoX25519 !== undefined)
-                    body.mihomoX25519 = params.mihomoX25519;
-
-                const result = await client.createHost(body);
+                const result = await client.createHost(compactBody(params));
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -210,8 +169,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
             remark: z.string().optional().describe('New remark/name'),
             address: z.string().optional().describe('New address'),
             port: z.number().optional().describe('New port'),
-            configProfileUuid: z.string().optional().describe('New config profile UUID'),
-            configProfileInboundUuid: z.string().optional().describe('New config profile inbound UUID'),
+            inbound: hostInboundSchema.optional(),
             path: z.string().optional().describe('New URL path'),
             sni: z.string().optional().describe('New SNI'),
             host: z.string().optional().describe('New host header'),
@@ -296,15 +254,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
         },
         async (params) => {
             try {
-                const { uuid, configProfileUuid, configProfileInboundUuid, ...fields } = params;
-                const body: Record<string, unknown> = { uuid, ...fields };
-                if (configProfileUuid !== undefined || configProfileInboundUuid !== undefined) {
-                    body.inbound = {
-                        ...(configProfileUuid !== undefined ? { configProfileUuid } : {}),
-                        ...(configProfileInboundUuid !== undefined ? { configProfileInboundUuid } : {}),
-                    };
-                }
-                const result = await client.updateHost(body);
+                const result = await client.updateHost(compactBody(params));
                 return toolResult(result);
             } catch (e) {
                 return toolError(e);
@@ -401,13 +351,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
         {
             uuids: z.array(z.string()).describe('Array of host UUIDs'),
             port: z.number().optional().describe('New port number'),
-            inbound: z
-                .object({
-                    configProfileUuid: z.string().describe('Config profile UUID'),
-                    configProfileInboundUuid: z.string().describe('Inbound UUID'),
-                })
-                .optional()
-                .describe('Inbound profile mapping to apply'),
+            inbound: hostInboundSchema.optional(),
             remark: z.string().optional().describe('Host remark/name'),
             address: z.string().optional().describe('Host address'),
             path: z.string().nullable().optional().describe('Path'),
