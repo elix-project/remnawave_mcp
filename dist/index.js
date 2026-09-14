@@ -59477,9 +59477,12 @@ function registerNodeTools(server, client, readonly2) {
       uuids: external_exports.array(external_exports.string()).describe("Array of node UUIDs"),
       countryCode: external_exports.string().optional().describe("New country code"),
       consumptionMultiplier: external_exports.number().optional().describe("New consumption multiplier"),
+      nodeConsumptionMultiplier: external_exports.number().optional().describe("Per-node traffic consumption multiplier"),
       providerUuid: external_exports.string().optional().describe("Infra provider UUID"),
       tags: external_exports.array(external_exports.string()).optional().describe("Node tags"),
-      activePluginUuid: external_exports.string().optional().describe("Active plugin UUID")
+      activePluginUuid: external_exports.string().optional().describe("Active plugin UUID"),
+      integrationUuids: external_exports.array(external_exports.string()).optional().describe("Node integration UUIDs"),
+      note: external_exports.string().optional().describe("Node note")
     },
     async (params) => {
       try {
@@ -59740,10 +59743,7 @@ function registerHostTools(server, client, readonly2) {
     {
       uuids: external_exports.array(external_exports.string()).describe("Array of host UUIDs"),
       port: external_exports.number().optional().describe("New port number"),
-      inbound: external_exports.object({
-        configProfileUuid: external_exports.string().describe("Config profile UUID"),
-        configProfileInboundUuid: external_exports.string().describe("Inbound UUID")
-      }).optional().describe("Inbound profile mapping to apply"),
+      inbound: hostInboundSchema.optional(),
       remark: external_exports.string().optional().describe("Host remark/name"),
       address: external_exports.string().optional().describe("Host address"),
       path: external_exports.string().nullable().optional().describe("Path"),
@@ -62059,7 +62059,7 @@ config_profiles_update accepts uuid (required), optional name, and optional conf
 function createServer(config2) {
   const server = new McpServer({
     name: "remnawave-mcp",
-    version: "1.6.1"
+    version: "1.7.0"
   });
   const client = new RemnawaveClient(config2);
   registerAllTools(server, client, config2.readonly);

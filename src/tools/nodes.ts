@@ -359,9 +359,18 @@ export function registerNodeTools(server: McpServer, client: RemnawaveClient, re
             uuids: z.array(z.string()).describe('Array of node UUIDs'),
             countryCode: z.string().optional().describe('New country code'),
             consumptionMultiplier: z.number().optional().describe('New consumption multiplier'),
+            nodeConsumptionMultiplier: z
+                .number()
+                .optional()
+                .describe('Per-node traffic consumption multiplier'),
             providerUuid: z.string().optional().describe('Infra provider UUID'),
             tags: z.array(z.string()).optional().describe('Node tags'),
             activePluginUuid: z.string().optional().describe('Active plugin UUID'),
+            integrationUuids: z
+                .array(z.string())
+                .optional()
+                .describe('Node integration UUIDs'),
+            note: z.string().optional().describe('Node note'),
         },
         async (params) => {
             try {

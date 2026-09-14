@@ -351,13 +351,7 @@ export function registerHostTools(server: McpServer, client: RemnawaveClient, re
         {
             uuids: z.array(z.string()).describe('Array of host UUIDs'),
             port: z.number().optional().describe('New port number'),
-            inbound: z
-                .object({
-                    configProfileUuid: z.string().describe('Config profile UUID'),
-                    configProfileInboundUuid: z.string().describe('Inbound UUID'),
-                })
-                .optional()
-                .describe('Inbound profile mapping to apply'),
+            inbound: hostInboundSchema.optional(),
             remark: z.string().optional().describe('Host remark/name'),
             address: z.string().optional().describe('Host address'),
             path: z.string().nullable().optional().describe('Path'),

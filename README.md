@@ -10,7 +10,7 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 1.6.1 | **Remnawave panel:** 3.4.4 | **Contract:** `@remnawave/backend-contract` 3.4.15
+**Version:** 1.7.0 | **Remnawave panel:** 3.4.4 | **Contract:** `@remnawave/backend-contract` 3.4.15
 
 Requires Remnawave panel 3.4.4. Users are identified by numeric `userId` (not UUID). IP Control tools are replaced by `connections_*`. Keep 1.5.0 for panel 2.8. Node and host write tools send nested API bodies (`configProfile`, `inbound`) instead of flattened fields.
 
@@ -611,7 +611,7 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 1.6.1 | **Панель Remnawave:** 3.4.4 | **Контракт:** `@remnawave/backend-contract` 3.4.15
+**Версия:** 1.7.0 | **Панель Remnawave:** 3.4.4 | **Контракт:** `@remnawave/backend-contract` 3.4.15
 
 Нужна панель Remnawave 3.4.4. Пользователи идентифицируются числовым `userId` (не UUID). IP Control заменён на `connections_*`. Для панели 2.8 оставайтесь на 1.5.0. Write-инструменты нод и хостов отправляют вложенные тела API (`configProfile`, `inbound`), а не плоские поля.
 

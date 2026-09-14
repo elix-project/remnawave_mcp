@@ -148,3 +148,20 @@ test('hosts_create and hosts_update nest inbound instead of flattening profile U
         'Shared inbound schema must include both profile and inbound UUIDs',
     );
 });
+
+test('handlers forward nested objects instead of remapping flat fields', () => {
+    assert.doesNotMatch(
+        dist,
+        /activeConfigProfileUuid:\s*params\.configProfileUuid/,
+        'Must not remap flattened configProfileUuid into the API body',
+    );
+    assert.doesNotMatch(
+        dist,
+        /configProfileUuid:\s*params\.configProfileUuid/,
+        'Must not rebuild inbound from flattened top-level profile UUIDs',
+    );
+    assert.match(dist, /client\.bulkNodeProfileModification\(\s*compactBody\(params\)/);
+    assert.match(dist, /client\.createNode\(compactBody\(params\)\)/);
+    assert.match(dist, /client\.createHost\(compactBody\(params\)\)/);
+    assert.match(dist, /client\.updateHost\(compactBody\(params\)\)/);
+});
