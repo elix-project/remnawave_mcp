@@ -58719,6 +58719,11 @@ function toolResult(data) {
     ]
   };
 }
+function compactBody(params) {
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== void 0)
+  );
+}
 function toolError(error2) {
   const message = error2 instanceof Error ? error2.message : String(error2);
   return {
@@ -59193,6 +59198,27 @@ function registerUserTools(server, client, readonly2) {
 }
 
 // src/tools/nodes.ts
+var nodeConfigProfileSchema = external_exports.object({
+  activeConfigProfileUuid: external_exports.string().describe("Config profile UUID"),
+  activeInbounds: external_exports.array(external_exports.string()).describe("Inbound UUIDs to enable on the node")
+}).describe(
+  "Nested API object { activeConfigProfileUuid, activeInbounds }. Do not flatten these fields to the top level."
+);
+var nodeIpSchema = external_exports.object({
+  ip: external_exports.string().describe("IPv4 or IPv6 address"),
+  status: external_exports.enum([
+    "INBOUND",
+    "OUTBOUND",
+    "MANAGEMENT",
+    "TRANSIT",
+    "MONITORING",
+    "RESERVE",
+    "BLOCKED",
+    "FLAGGED",
+    "DEPRECATED",
+    "UNKNOWN"
+  ]).describe("IP role/status")
+});
 function registerNodeTools(server, client, readonly2) {
   server.tool(
     "nodes_list",
@@ -59249,33 +59275,19 @@ function registerNodeTools(server, client, readonly2) {
       trafficResetDay: external_exports.number().optional().describe("Day of month to reset traffic (1-31)"),
       notifyPercent: external_exports.number().optional().describe("Traffic notification threshold percentage"),
       consumptionMultiplier: external_exports.number().optional().describe("Traffic consumption multiplier"),
-      activeConfigProfileUuid: external_exports.string().describe("Config profile UUID to assign"),
-      activeInbounds: external_exports.array(external_exports.string()).describe("Array of inbound UUIDs to enable")
+      nodeConsumptionMultiplier: external_exports.number().optional().describe("Per-node traffic consumption multiplier"),
+      proxyUrl: external_exports.string().optional().describe("SOCKS5 proxy URL (socks5://[user:pass@]host:port)"),
+      configProfile: nodeConfigProfileSchema,
+      providerUuid: external_exports.string().optional().describe("Infra provider UUID"),
+      tags: external_exports.array(external_exports.string()).optional().describe("Node tags"),
+      activePluginUuid: external_exports.string().optional().describe("Active plugin UUID"),
+      integrationUuids: external_exports.array(external_exports.string()).optional().describe("Node integration UUIDs"),
+      note: external_exports.string().optional().describe("Node note"),
+      ips: external_exports.array(nodeIpSchema).optional().describe("Node IP list")
     },
     async (params) => {
       try {
-        const body = {
-          name: params.name,
-          address: params.address,
-          configProfile: {
-            activeConfigProfileUuid: params.activeConfigProfileUuid,
-            activeInbounds: params.activeInbounds
-          }
-        };
-        if (params.port !== void 0) body.port = params.port;
-        if (params.countryCode !== void 0)
-          body.countryCode = params.countryCode;
-        if (params.isTrafficTrackingActive !== void 0)
-          body.isTrafficTrackingActive = params.isTrafficTrackingActive;
-        if (params.trafficLimitBytes !== void 0)
-          body.trafficLimitBytes = params.trafficLimitBytes;
-        if (params.trafficResetDay !== void 0)
-          body.trafficResetDay = params.trafficResetDay;
-        if (params.notifyPercent !== void 0)
-          body.notifyPercent = params.notifyPercent;
-        if (params.consumptionMultiplier !== void 0)
-          body.consumptionMultiplier = params.consumptionMultiplier;
-        const result = await client.createNode(body);
+        const result = await client.createNode(compactBody(params));
         return toolResult(result);
       } catch (e) {
         return toolError(e);
@@ -59295,11 +59307,20 @@ function registerNodeTools(server, client, readonly2) {
       trafficLimitBytes: external_exports.number().optional().describe("New traffic limit"),
       trafficResetDay: external_exports.number().optional().describe("New traffic reset day"),
       notifyPercent: external_exports.number().optional().describe("New notification threshold"),
-      consumptionMultiplier: external_exports.number().optional().describe("New consumption multiplier")
+      consumptionMultiplier: external_exports.number().optional().describe("New consumption multiplier"),
+      nodeConsumptionMultiplier: external_exports.number().optional().describe("Per-node traffic consumption multiplier"),
+      proxyUrl: external_exports.string().nullable().optional().describe("SOCKS5 proxy URL (socks5://[user:pass@]host:port)"),
+      configProfile: nodeConfigProfileSchema.optional(),
+      providerUuid: external_exports.string().optional().describe("Infra provider UUID"),
+      tags: external_exports.array(external_exports.string()).optional().describe("Node tags"),
+      activePluginUuid: external_exports.string().optional().describe("Active plugin UUID"),
+      integrationUuids: external_exports.array(external_exports.string()).optional().describe("Node integration UUIDs"),
+      note: external_exports.string().optional().describe("Node note"),
+      ips: external_exports.array(nodeIpSchema).optional().describe("Node IP list")
     },
     async (params) => {
       try {
-        const result = await client.updateNode(params);
+        const result = await client.updateNode(compactBody(params));
         return toolResult(result);
       } catch (e) {
         return toolError(e);
@@ -59417,22 +59438,16 @@ function registerNodeTools(server, client, readonly2) {
   );
   server.tool(
     "nodes_bulk_profile_modification",
-    "Bulk modify config profile for selected nodes",
+    "Bulk modify config profile for selected nodes. Body matches the Remnawave API: { uuids, configProfile: { activeConfigProfileUuid, activeInbounds } }.",
     {
       uuids: external_exports.array(external_exports.string()).describe("Array of node UUIDs"),
-      configProfileUuid: external_exports.string().describe("New config profile UUID"),
-      activeInbounds: external_exports.array(external_exports.string()).describe("Array of inbound UUIDs to enable")
+      configProfile: nodeConfigProfileSchema
     },
     async (params) => {
       try {
-        const body = {
-          uuids: params.uuids,
-          configProfile: {
-            activeConfigProfileUuid: params.configProfileUuid,
-            activeInbounds: params.activeInbounds
-          }
-        };
-        const result = await client.bulkNodeProfileModification(body);
+        const result = await client.bulkNodeProfileModification(
+          compactBody(params)
+        );
         return toolResult(result);
       } catch (e) {
         return toolError(e);
@@ -59480,6 +59495,12 @@ function registerNodeTools(server, client, readonly2) {
 
 // src/tools/hosts.ts
 var SUBSCRIPTION_TYPES = ["XRAY_JSON", "XRAY_BASE64", "MIHOMO", "STASH", "CLASH", "SINGBOX"];
+var hostInboundSchema = external_exports.object({
+  configProfileUuid: external_exports.string().describe("Config profile UUID"),
+  configProfileInboundUuid: external_exports.string().describe("Config profile inbound UUID")
+}).describe(
+  "Nested API object { configProfileUuid, configProfileInboundUuid }. Do not flatten these fields to the top level."
+);
 function registerHostTools(server, client, readonly2) {
   server.tool(
     "hosts_list",
@@ -59530,8 +59551,7 @@ function registerHostTools(server, client, readonly2) {
       remark: external_exports.string().describe("Host remark/name"),
       address: external_exports.string().describe("Host address"),
       port: external_exports.number().describe("Host port"),
-      configProfileUuid: external_exports.string().describe("Config profile UUID"),
-      configProfileInboundUuid: external_exports.string().describe("Config profile inbound UUID"),
+      inbound: hostInboundSchema,
       path: external_exports.string().optional().describe("URL path"),
       sni: external_exports.string().optional().describe("SNI (Server Name Indication)"),
       host: external_exports.string().optional().describe("Host header"),
@@ -59568,50 +59588,7 @@ function registerHostTools(server, client, readonly2) {
     },
     async (params) => {
       try {
-        const body = {
-          remark: params.remark,
-          address: params.address,
-          port: params.port,
-          inbound: {
-            configProfileUuid: params.configProfileUuid,
-            configProfileInboundUuid: params.configProfileInboundUuid
-          }
-        };
-        if (params.path !== void 0) body.path = params.path;
-        if (params.sni !== void 0) body.sni = params.sni;
-        if (params.host !== void 0) body.host = params.host;
-        if (params.alpn !== void 0) body.alpn = params.alpn;
-        if (params.fingerprint !== void 0)
-          body.fingerprint = params.fingerprint;
-        if (params.isDisabled !== void 0)
-          body.isDisabled = params.isDisabled;
-        if (params.isHidden !== void 0)
-          body.isHidden = params.isHidden;
-        if (params.securityLayer !== void 0)
-          body.securityLayer = params.securityLayer;
-        if (params.tags !== void 0) body.tags = params.tags;
-        if (params.serverDescription !== void 0)
-          body.serverDescription = params.serverDescription;
-        if (params.nodes !== void 0) body.nodes = params.nodes;
-        if (params.excludeFromSubscriptionTypes !== void 0)
-          body.excludeFromSubscriptionTypes = params.excludeFromSubscriptionTypes;
-        if (params.xrayJsonTemplateUuid !== void 0)
-          body.xrayJsonTemplateUuid = params.xrayJsonTemplateUuid;
-        if (params.internalSquads !== void 0)
-          body.internalSquads = params.internalSquads;
-        if (params.overrideSniFromAddress !== void 0)
-          body.overrideSniFromAddress = params.overrideSniFromAddress;
-        if (params.keepSniBlank !== void 0)
-          body.keepSniBlank = params.keepSniBlank;
-        if (params.allowInsecure !== void 0)
-          body.allowInsecure = params.allowInsecure;
-        if (params.vlessRouteId !== void 0)
-          body.vlessRouteId = params.vlessRouteId;
-        if (params.shuffleHost !== void 0)
-          body.shuffleHost = params.shuffleHost;
-        if (params.mihomoX25519 !== void 0)
-          body.mihomoX25519 = params.mihomoX25519;
-        const result = await client.createHost(body);
+        const result = await client.createHost(compactBody(params));
         return toolResult(result);
       } catch (e) {
         return toolError(e);
@@ -59626,8 +59603,7 @@ function registerHostTools(server, client, readonly2) {
       remark: external_exports.string().optional().describe("New remark/name"),
       address: external_exports.string().optional().describe("New address"),
       port: external_exports.number().optional().describe("New port"),
-      configProfileUuid: external_exports.string().optional().describe("New config profile UUID"),
-      configProfileInboundUuid: external_exports.string().optional().describe("New config profile inbound UUID"),
+      inbound: hostInboundSchema.optional(),
       path: external_exports.string().optional().describe("New URL path"),
       sni: external_exports.string().optional().describe("New SNI"),
       host: external_exports.string().optional().describe("New host header"),
@@ -59664,15 +59640,7 @@ function registerHostTools(server, client, readonly2) {
     },
     async (params) => {
       try {
-        const { uuid: uuid2, configProfileUuid, configProfileInboundUuid, ...fields } = params;
-        const body = { uuid: uuid2, ...fields };
-        if (configProfileUuid !== void 0 || configProfileInboundUuid !== void 0) {
-          body.inbound = {
-            ...configProfileUuid !== void 0 ? { configProfileUuid } : {},
-            ...configProfileInboundUuid !== void 0 ? { configProfileInboundUuid } : {}
-          };
-        }
-        const result = await client.updateHost(body);
+        const result = await client.updateHost(compactBody(params));
         return toolResult(result);
       } catch (e) {
         return toolError(e);
@@ -62091,7 +62059,7 @@ config_profiles_update accepts uuid (required), optional name, and optional conf
 function createServer(config2) {
   const server = new McpServer({
     name: "remnawave-mcp",
-    version: "1.6.0"
+    version: "1.6.1"
   });
   const client = new RemnawaveClient(config2);
   registerAllTools(server, client, config2.readonly);

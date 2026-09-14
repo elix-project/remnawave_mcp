@@ -9,6 +9,12 @@ export function toolResult(data: unknown) {
     };
 }
 
+export function compactBody(params: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(
+        Object.entries(params).filter(([, value]) => value !== undefined),
+    );
+}
+
 export function toolError(error: unknown) {
     const message =
         error instanceof Error ? error.message : String(error);

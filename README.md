@@ -10,9 +10,9 @@
 
 MCP server ([Model Context Protocol](https://modelcontextprotocol.io)) providing LLM clients (Claude Desktop, Cursor, Windsurf, etc.) with tools to manage a [Remnawave](https://github.com/remnawave/) VPN panel.
 
-**Version:** 1.6.0 | **Remnawave panel:** 3.4.x | **Contract:** `@remnawave/backend-contract` 3.4.15
+**Version:** 1.6.1 | **Remnawave panel:** 3.4.4 | **Contract:** `@remnawave/backend-contract` 3.4.15
 
-Requires Remnawave panel 3.4. Users are identified by numeric `userId` (not UUID). IP Control tools are replaced by `connections_*`. Keep 1.5.0 for panel 2.8.
+Requires Remnawave panel 3.4.4. Users are identified by numeric `userId` (not UUID). IP Control tools are replaced by `connections_*`. Keep 1.5.0 for panel 2.8. Node and host write tools send nested API bodies (`configProfile`, `inbound`) instead of flattened fields.
 
 ### Features
 
@@ -248,7 +248,7 @@ After changing TypeScript sources, run `npm run build` and commit the updated `d
 | `nodes_restart_all` | Restart all nodes | write |
 | `nodes_reset_traffic` | Reset node traffic counter | write |
 | `nodes_reorder` | Reorder nodes | write |
-| `nodes_bulk_profile_modification` | Bulk modify node profiles | write |
+| `nodes_bulk_profile_modification` | Bulk modify node profiles (`uuids` + nested `configProfile`) | write |
 | `nodes_bulk_actions` | Bulk node actions | write |
 | `nodes_bulk_update` | Bulk update nodes | write |
 
@@ -611,9 +611,9 @@ MIT
 
 MCP-сервер ([Model Context Protocol](https://modelcontextprotocol.io)), предоставляющий LLM-клиентам (Claude Desktop, Cursor, Windsurf и др.) инструменты для управления VPN-панелью [Remnawave](https://github.com/remnawave/).
 
-**Версия:** 1.6.0 | **Панель Remnawave:** 3.4.x | **Контракт:** `@remnawave/backend-contract` 3.4.15
+**Версия:** 1.6.1 | **Панель Remnawave:** 3.4.4 | **Контракт:** `@remnawave/backend-contract` 3.4.15
 
-Нужна панель Remnawave 3.4. Пользователи идентифицируются числовым `userId` (не UUID). IP Control заменён на `connections_*`. Для панели 2.8 оставайтесь на 1.5.0.
+Нужна панель Remnawave 3.4.4. Пользователи идентифицируются числовым `userId` (не UUID). IP Control заменён на `connections_*`. Для панели 2.8 оставайтесь на 1.5.0. Write-инструменты нод и хостов отправляют вложенные тела API (`configProfile`, `inbound`), а не плоские поля.
 
 ### Возможности
 
@@ -849,7 +849,7 @@ npm run build
 | `nodes_restart_all` | Перезапустить все ноды | write |
 | `nodes_reset_traffic` | Сбросить трафик ноды | write |
 | `nodes_reorder` | Переупорядочить ноды | write |
-| `nodes_bulk_profile_modification` | Массовое изменение профилей нод | write |
+| `nodes_bulk_profile_modification` | Массовое изменение профилей нод (`uuids` + вложенный `configProfile`) | write |
 | `nodes_bulk_actions` | Массовые действия с нодами | write |
 | `nodes_bulk_update` | Массовое обновление нод | write |
 

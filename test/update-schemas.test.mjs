@@ -85,3 +85,66 @@ test('hosts_create uses tags and internalSquads', () => {
     assert.match(slice, /internalSquads:/);
     assert.doesNotMatch(slice, /excludedInternalSquads/);
 });
+
+test('nodes_bulk_profile_modification sends nested configProfile, not a flat body', () => {
+    const slice = toolSlice('nodes_bulk_profile_modification', 2000);
+    assert.match(
+        slice,
+        /configProfile:\s*nodeConfigProfileSchema/,
+        'MCP schema must expose nested configProfile to match the Remnawave API',
+    );
+    assert.match(slice, /uuids:/);
+    assert.doesNotMatch(
+        slice,
+        /configProfileUuid:\s*\w+(?:\.\w+)*\.string\(\)/,
+        'Do not flatten activeConfigProfileUuid to top-level configProfileUuid',
+    );
+    assert.match(
+        dist,
+        /nodeConfigProfileSchema = [\s\S]*activeConfigProfileUuid:[\s\S]*activeInbounds:/,
+        'Shared configProfile schema must include activeConfigProfileUuid and activeInbounds',
+    );
+});
+
+test('nodes_create uses nested configProfile object', () => {
+    const slice = toolSlice('nodes_create', 3000);
+    assert.match(
+        slice,
+        /configProfile:\s*nodeConfigProfileSchema/,
+        'nodes_create must take configProfile: { activeConfigProfileUuid, activeInbounds }',
+    );
+    assert.doesNotMatch(
+        slice,
+        /activeConfigProfileUuid:\s*\w+(?:\.\w+)*\.string\(\)\s*\.describe\("Config profile UUID to assign"\)/,
+    );
+});
+
+test('nodes_update accepts nested configProfile', () => {
+    const slice = toolSlice('nodes_update', 2500);
+    assert.match(
+        slice,
+        /configProfile:\s*nodeConfigProfileSchema\.optional\(\)/,
+        'nodes_update must accept nested configProfile so profile/inbound changes are not dropped',
+    );
+});
+
+test('hosts_create and hosts_update nest inbound instead of flattening profile UUIDs', () => {
+    const createSlice = toolSlice('hosts_create', 2500);
+    assert.match(
+        createSlice,
+        /inbound:\s*hostInboundSchema/,
+        'hosts_create must send inbound: { configProfileUuid, configProfileInboundUuid }',
+    );
+
+    const updateSlice = toolSlice('hosts_update', 2500);
+    assert.match(
+        updateSlice,
+        /inbound:\s*hostInboundSchema\.optional\(\)/,
+        'hosts_update must send nested inbound, not top-level configProfileUuid',
+    );
+    assert.match(
+        dist,
+        /hostInboundSchema = [\s\S]*configProfileUuid:[\s\S]*configProfileInboundUuid:/,
+        'Shared inbound schema must include both profile and inbound UUIDs',
+    );
+});
